@@ -197,17 +197,17 @@ export default function BoardPage() {
   };
   
   const handleTextMove = (textId: string, newPosition: [number, number]) => {
-    const updatedData = updateTextItem(textId, { position: newPosition });
+    updateTextItem(textId, { position: newPosition });
     // We don't save on every move event for performance, only on pointer up, handled in EditableText
   };
   
   const handleTextResize = (textId: string, newFontSize: number) => {
-    const updatedData = updateTextItem(textId, { font_size: newFontSize });
+    updateTextItem(textId, { font_size: newFontSize });
      // We don't save on every resize event for performance, only on pointer up, handled in EditableText
   };
 
   const handleTextWidthChange = (textId: string, newWidth: number) => {
-    const updatedData = updateTextItem(textId, { width: newWidth });
+    updateTextItem(textId, { width: newWidth });
     // We don't save on every resize event for performance, only on pointer up, handled in EditableText
   };
 

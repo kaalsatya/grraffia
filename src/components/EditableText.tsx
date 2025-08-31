@@ -73,6 +73,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
      if (isEditing) return;
+     // Only start dragging if the target is the container itself, not a handle
+     if (e.target !== containerRef.current) return;
      e.preventDefault();
      e.stopPropagation();
      (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -89,6 +91,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasBounds || !containerRef.current) return;
+    if (!isDragging && !isResizing) return;
+    
     e.preventDefault();
     e.stopPropagation();
 
@@ -128,17 +132,14 @@ export const EditableText: React.FC<EditableTextProps> = ({
   }, [isDragging, isResizing, pos, fs, w, canvasBounds, onMove, onResize, onWidthChange, id]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
     if (isDragging || isResizing) {
         onPointerUp(id, { position: pos, fontSize: fs, width: w });
     }
 
     setIsDragging(false);
     setIsResizing(null);
-    if (document.pointerLockElement === e.target) {
-        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+     if ((e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     }
   }, [isDragging, isResizing, id, pos, fs, w, onPointerUp]);
 
@@ -175,6 +176,26 @@ export const EditableText: React.FC<EditableTextProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isActive]);
+
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onPointerMoveGlobal = (e: PointerEvent) => handlePointerMove(e as any);
+    const onPointerUpGlobal = (e: PointerEvent) => handlePointerUp(e as any);
+
+    if (isDragging || isResizing) {
+        window.addEventListener('pointermove', onPointerMoveGlobal);
+        window.addEventListener('pointerup', onPointerUpGlobal);
+    }
+
+    return () => {
+        window.removeEventListener('pointermove', onPointerMoveGlobal);
+        window.removeEventListener('pointerup', onPointerUpGlobal);
+    };
+  }, [isDragging, isResizing, handlePointerMove, handlePointerUp]);
+
 
   const containerStyle: React.CSSProperties = {
     position: 'absolute',
@@ -225,8 +246,6 @@ export const EditableText: React.FC<EditableTextProps> = ({
         style={containerStyle} 
         onDoubleClick={handleDoubleClick}
         onPointerDown={handlePointerDown}
-        onPointerMove={isDragging || isResizing ? handlePointerMove : undefined}
-        onPointerUp={isDragging || isResizing ? handlePointerUp : undefined}
         onClick={(e) => { e.stopPropagation(); setIsActive(true); }}
     >
       {isEditing ? (
@@ -241,7 +260,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
-        <div style={{ wordWrap: 'break-word' }}>
+        <div style={{ wordWrap: 'break-word', pointerEvents: 'none' }}>
           {content}
         </div>
       )}
