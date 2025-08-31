@@ -20,6 +20,7 @@ import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 
 interface TextItem {
