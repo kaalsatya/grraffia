@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Folder, File, FolderPlus, FilePlus, MoreVertical, Trash2, ArrowLeft } from 'lucide-react';
@@ -25,6 +26,7 @@ import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 interface FileSystemItem {
   name: string;
   kind: 'file' | 'directory';
+  handle: FileSystemHandle;
 }
 
 interface PathSegment {
@@ -49,6 +51,7 @@ const initialBoardContent = `{
 }`;
 
 export default function Home() {
+  const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(true);
   const [rootDirectoryHandle, setRootDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [currentDirectoryHandle, setCurrentDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
@@ -68,7 +71,7 @@ export default function Home() {
         const contents: FileSystemItem[] = [];
         for await (const entry of handle.values()) {
           if (entry.kind === 'directory' || (entry.kind === 'file' && entry.name.endsWith('.board'))) {
-            contents.push({ name: entry.name, kind: entry.kind });
+            contents.push({ name: entry.name, kind: entry.kind, handle: entry });
           }
         }
         setDirectoryContents(contents.sort((a, b) => {
@@ -174,6 +177,9 @@ export default function Home() {
         setError(`Could not open folder: ${item.name}`);
         console.error(err);
       }
+    } else if (item.kind === 'file') {
+        const filePath = [...path.map(p => p.name), item.name].join('/');
+        router.push(`/board/${encodeURIComponent(filePath)}`);
     }
   };
 
@@ -326,7 +332,7 @@ export default function Home() {
                 <ul className="space-y-1">
                   {directoryContents.map((item) => (
                     <li key={item.name} className="flex items-center gap-2 group">
-                      <button onClick={() => handleItemClick(item)} className="flex items-center gap-2 flex-grow text-left p-1 rounded-md hover:bg-accent disabled:hover:bg-transparent" disabled={item.kind === 'file'}>
+                      <button onClick={() => handleItemClick(item)} className="flex items-center gap-2 flex-grow text-left p-1 rounded-md hover:bg-accent">
                         {item.kind === 'directory' ? <Folder className="h-5 w-5 shrink-0 text-primary" /> : <File className="h-5 w-5 shrink-0 text-secondary-foreground" />}
                         <span className="flex-grow truncate">{item.name}</span>
                       </button>
