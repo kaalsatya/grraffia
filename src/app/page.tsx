@@ -44,8 +44,7 @@ const initialBoardContent = `{
           "position": [0, 0],
           "font_size": 20
         }
-      ],
-      "images": []
+      ]
     }
   ]
 }`;
@@ -178,7 +177,10 @@ export default function Home() {
         console.error(err);
       }
     } else if (item.kind === 'file') {
-        const filePath = [...path.map(p => p.name), item.name].join('/');
+        // Create the full path from the root handle
+        const pathParts = path.slice(1).map(p => p.name); // Exclude the root handle name
+        pathParts.push(item.name);
+        const filePath = pathParts.join('/');
         router.push(`/board/${encodeURIComponent(filePath)}`);
     }
   };

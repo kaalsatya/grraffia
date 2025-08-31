@@ -36,59 +36,44 @@ export default function BoardPage() {
 
   useEffect(() => {
     const loadBoard = async () => {
+      // The actual file loading logic will be implemented in a future step.
+      // For now, we'll use placeholder data to confirm the page works.
       try {
-        const path = Array.isArray(params.path) ? params.path.join('/') : params.path;
-        const decodedPath = decodeURIComponent(path);
+        // This is a placeholder to simulate loading.
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // This is a simplified example. In a real app, you would need a more robust way
-        // to get the directory handle, likely from a global state or context after the
-        // user has picked a folder on the home page.
-        // For now, we assume the user has already granted permission.
-        const rootHandle = await navigator.storage.getDirectory(); // This won't work directly, placeholder
-        
-        // This part of the code is conceptually correct but won't work in practice
-        // without a way to persist the FileSystemDirectoryHandle. We will address this later.
-        
-        // Let's stub the data for now to build the UI.
         const fileContent = `{
           "slides": [
             {
               "slide_number": 1,
               "texts": [
-                { "content": "This is a slide", "position": [10, 10], "font_size": 48 }
+                { "content": "Welcome to your presentation!", "position": [50, 50], "font_size": 48 }
               ],
               "images": []
             }
           ]
         }`;
-
         const data = JSON.parse(fileContent) as BoardData;
         setBoardData(data);
 
       } catch (err) {
-        setError('Failed to load the board file. Please ensure you have granted access to the folder.');
+        setError('Failed to load board data.');
         console.error(err);
       }
     };
 
     if (params.path) {
-      // For now, we are using placeholder data.
-      // We will implement the actual file reading in a future step.
-      const fileContent = `{
-        "slides": [
-          {
-            "slide_number": 1,
-            "texts": [
-              { "content": "Welcome to your presentation!", "position": [50, 50], "font_size": 48 }
-            ],
-            "images": []
-          }
-        ]
-      }`;
-      const data = JSON.parse(fileContent) as BoardData;
-      setBoardData(data);
+      loadBoard();
     }
   }, [params.path]);
+
+  const getFileName = () => {
+    if (!params.path) return 'Board';
+    const path = Array.isArray(params.path) ? params.path.join('/') : params.path;
+    const decodedPath = decodeURIComponent(path);
+    const parts = decodedPath.split('/');
+    return parts[parts.length - 1];
+  }
 
   return (
     <>
@@ -100,13 +85,15 @@ export default function BoardPage() {
             Back to Files
           </Button>
           <h1 className="text-xl font-bold">
-            {params.path ? decodeURIComponent(Array.isArray(params.path) ? params.path[params.path.length-1] : params.path) : 'Board'}
+            {getFileName()}
           </h1>
         </header>
 
         <div className="flex-grow flex items-center justify-center">
             {error && <p className="text-red-500">{error}</p>}
             
+            {!boardData && !error && <p>Loading board...</p>}
+
             {boardData && boardData.slides.length > 0 ? (
                  <div className="w-full h-full aspect-video bg-card/80 backdrop-blur-sm rounded-lg shadow-lg relative overflow-hidden">
                     {boardData.slides[0].texts.map((text, index) => (
@@ -126,7 +113,7 @@ export default function BoardPage() {
                     ))}
                  </div>
             ) : (
-                <p>Loading board...</p>
+                !error && boardData && <p>This board is empty.</p>
             )}
         </div>
       </main>
