@@ -75,15 +75,13 @@ export const EditableText: React.FC<EditableTextProps> = ({
      if (isEditing) return;
      // Only start dragging if the target is the container itself, not a handle
      if (e.target !== containerRef.current) return;
-     e.preventDefault();
-     e.stopPropagation();
+     
      (e.target as HTMLElement).setPointerCapture(e.pointerId);
      setIsActive(true);
      setIsDragging(true);
   }, [isEditing]);
 
   const handleResizePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
-    e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     setIsResizing(direction);
@@ -131,15 +129,16 @@ export const EditableText: React.FC<EditableTextProps> = ({
     }
   }, [isDragging, isResizing, pos, fs, w, canvasBounds, onMove, onResize, onWidthChange, id]);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const handleGlobalPointerUp = useCallback((e: PointerEvent) => {
     if (isDragging || isResizing) {
         onPointerUp(id, { position: pos, fontSize: fs, width: w });
     }
 
     setIsDragging(false);
     setIsResizing(null);
-     if ((e.target as HTMLElement).hasPointerCapture(e.pointerId)) {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    const target = e.target as HTMLElement;
+     if (target && target.hasPointerCapture(e.pointerId)) {
+        target.releasePointerCapture(e.pointerId);
     }
   }, [isDragging, isResizing, id, pos, fs, w, onPointerUp]);
 
@@ -170,31 +169,27 @@ export const EditableText: React.FC<EditableTextProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        if(isActive) setIsActive(false);
+        if(isActive && !isEditing) setIsActive(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isActive]);
+  }, [isActive, isEditing]);
 
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
     const onPointerMoveGlobal = (e: PointerEvent) => handlePointerMove(e as any);
-    const onPointerUpGlobal = (e: PointerEvent) => handlePointerUp(e as any);
-
+    
     if (isDragging || isResizing) {
         window.addEventListener('pointermove', onPointerMoveGlobal);
-        window.addEventListener('pointerup', onPointerUpGlobal);
+        window.addEventListener('pointerup', handleGlobalPointerUp);
     }
 
     return () => {
         window.removeEventListener('pointermove', onPointerMoveGlobal);
-        window.removeEventListener('pointerup', onPointerUpGlobal);
+        window.removeEventListener('pointerup', handleGlobalPointerUp);
     };
-  }, [isDragging, isResizing, handlePointerMove, handlePointerUp]);
+  }, [isDragging, isResizing, handlePointerMove, handleGlobalPointerUp]);
 
 
   const containerStyle: React.CSSProperties = {
@@ -206,7 +201,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
     fontSize: `${fs}px`,
     lineHeight: 1.2,
     color: 'black',
-    cursor: isDragging ? 'grabbing' : 'grab',
+    cursor: isDragging ? 'grabbing' : (isActive ? 'grab' : 'default'),
     userSelect: 'none',
     border: isActive ? '1px dashed #007aff' : '1px solid transparent',
     padding: '4px',
