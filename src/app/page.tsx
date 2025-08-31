@@ -173,46 +173,50 @@ export default function Home() {
 
   if (showWelcome) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+      <>
         <BackgroundAnimation />
-        <div className="mx-auto max-w-4xl w-full text-center">
-          <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-            Welcome to grraffia
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            A new way to interact with your file system.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button onClick={() => setShowWelcome(false)} size="lg">
-              Get Started
-            </Button>
+        <main className="flex min-h-screen flex-col items-center justify-center bg-transparent p-8">
+          <div className="mx-auto max-w-4xl w-full text-center">
+            <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
+              Welcome to grraffia
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-muted-foreground">
+              A new way to interact with your file system.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Button onClick={() => setShowWelcome(false)} size="lg">
+                Get Started
+              </Button>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
   if (!rootDirectoryHandle) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+      <>
         <BackgroundAnimation />
-        <div className="mx-auto max-w-4xl w-full text-center">
-          <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-            Your Workspace
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Get started by selecting your working folder.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button onClick={handleMountClick} size="lg">
-              Mount Folder
-            </Button>
+        <main className="flex min-h-screen flex-col items-center justify-center bg-transparent p-8">
+          <div className="mx-auto max-w-4xl w-full text-center">
+            <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
+              Your Workspace
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-muted-foreground">
+              Get started by selecting your working folder.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Button onClick={handleMountClick} size="lg">
+                Mount Folder
+              </Button>
+            </div>
+            {error && (
+              <p className="mt-6 text-red-500">{error}</p>
+            )}
           </div>
-          {error && (
-            <p className="mt-6 text-red-500">{error}</p>
-          )}
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
