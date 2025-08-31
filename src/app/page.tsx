@@ -11,6 +11,7 @@ interface FileSystemItem {
 }
 
 export default function Home() {
+  const [showWelcome, setShowWelcome] = useState(true);
   const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [directoryContents, setDirectoryContents] = useState<FileSystemItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -53,8 +54,8 @@ export default function Home() {
 
     getDirectoryContents();
   }, [directoryHandle]);
-
-  if (!directoryHandle) {
+  
+  if (showWelcome) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
         <div className="mx-auto max-w-4xl w-full text-center">
@@ -62,11 +63,31 @@ export default function Home() {
             Welcome to grraffia
           </h1>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
+            A new way to interact with your file system.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <Button onClick={() => setShowWelcome(false)} size="lg">
+              Get Started
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!directoryHandle) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+        <div className="mx-auto max-w-4xl w-full text-center">
+          <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
+            Your Workspace
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-muted-foreground">
             Get started by selecting your working folder.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button onClick={handleMountClick} size="lg">
-              Get Started
+              Mount Folder
             </Button>
           </div>
           {error && (
