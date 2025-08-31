@@ -32,6 +32,22 @@ interface PathSegment {
   handle: FileSystemDirectoryHandle;
 }
 
+const initialBoardContent = `{
+  "slides": [
+    {
+      "slide_number": 1,
+      "texts": [
+        {
+          "content": "Hello World",
+          "position": [0, 0],
+          "font_size": 20
+        }
+      ],
+      "images": []
+    }
+  ]
+}`;
+
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [rootDirectoryHandle, setRootDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
@@ -94,7 +110,11 @@ export default function Home() {
     if (currentDirectoryHandle && newItemName) {
       const finalFileName = newItemName.endsWith('.board') ? newItemName : `${newItemName}.board`;
       try {
-        await currentDirectoryHandle.getFileHandle(finalFileName, { create: true });
+        const fileHandle = await currentDirectoryHandle.getFileHandle(finalFileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(initialBoardContent);
+        await writable.close();
+        
         setNewItemName('');
         setCreateFileDialogOpen(false);
         await getDirectoryContents(currentDirectoryHandle);
