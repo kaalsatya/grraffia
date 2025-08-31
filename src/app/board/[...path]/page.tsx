@@ -187,7 +187,7 @@ export default function BoardPage() {
         {boardData && (
           <footer className="fixed bottom-0 left-0 w-full h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-t border-border z-20">
             {/* Thumbs */}
-            <div className="flex items-center p-2 gap-2 overflow-x-auto">
+            <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
                     <div key={index} className="flex-shrink-0 text-center">
                         <Card
@@ -197,8 +197,8 @@ export default function BoardPage() {
                                 index === currentSlideIndex ? "border-primary" : "border-transparent hover:border-muted-foreground/50"
                             )}
                         >
-                            <CardContent className="flex flex-col items-center justify-center aspect-video p-1 bg-white/90">
-                                <span className="text-xs text-black/70 truncate scale-[0.5]">
+                            <CardContent className="flex flex-col items-center justify-center h-full p-1 bg-white/90">
+                                <span className="text-xs text-black/70 truncate scale-[0.5] leading-none">
                                     {slide.texts.length > 0 ? slide.texts[0].content : `Slide ${index + 1}`}
                                 </span>
                             </CardContent>
