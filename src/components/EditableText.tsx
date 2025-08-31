@@ -41,6 +41,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Update local state if props change from outside
   useEffect(() => { setPos(position); }, [position]);
@@ -73,12 +74,16 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
      if (isEditing) return;
-     // Only start dragging if the target is the container itself, not a handle
      if (e.target !== containerRef.current) return;
      
-     (e.target as HTMLElement).setPointerCapture(e.pointerId);
      setIsActive(true);
-     setIsDragging(true);
+     
+     longPressTimerRef.current = setTimeout(() => {
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        setIsDragging(true);
+        longPressTimerRef.current = null;
+     }, 300); // 300ms for long press
+
   }, [isEditing]);
 
   const handleResizePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
@@ -89,6 +94,13 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasBounds || !containerRef.current) return;
+
+    if (longPressTimerRef.current) {
+      // If user moves before long press timeout, cancel it.
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
     if (!isDragging && !isResizing) return;
     
     e.preventDefault();
@@ -130,6 +142,11 @@ export const EditableText: React.FC<EditableTextProps> = ({
   }, [isDragging, isResizing, pos, fs, w, canvasBounds, onMove, onResize, onWidthChange, id]);
 
   const handleGlobalPointerUp = useCallback((e: PointerEvent) => {
+    if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+    }
+
     if (isDragging || isResizing) {
         onPointerUp(id, { position: pos, fontSize: fs, width: w });
     }
@@ -180,7 +197,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
   useEffect(() => {
     const onPointerMoveGlobal = (e: PointerEvent) => handlePointerMove(e as any);
     
-    if (isDragging || isResizing) {
+    // Add listeners only when an interaction (drag, resize, or long-press) is possible
+    if (isActive || isResizing) {
         window.addEventListener('pointermove', onPointerMoveGlobal);
         window.addEventListener('pointerup', handleGlobalPointerUp);
     }
@@ -189,7 +207,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
         window.removeEventListener('pointermove', onPointerMoveGlobal);
         window.removeEventListener('pointerup', handleGlobalPointerUp);
     };
-  }, [isDragging, isResizing, handlePointerMove, handleGlobalPointerUp]);
+  }, [isActive, isResizing, handlePointerMove, handleGlobalPointerUp]);
 
 
   const containerStyle: React.CSSProperties = {
