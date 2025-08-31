@@ -110,8 +110,8 @@ export default function Home() {
               <ul className="space-y-2">
                 {directoryContents.map((item) => (
                   <li key={item.name} className="flex items-center gap-2">
-                    {item.kind === 'directory' ? <Folder className="h-5 w-5 text-primary" /> : <File className="h-5 w-5 text-secondary-foreground" />}
-                    <span>{item.name}</span>
+                    {item.kind === 'directory' ? <Folder className="h-5 w-5 shrink-0 text-primary" /> : <File className="h-5 w-5 shrink-0 text-secondary-foreground" />}
+                    <span className="truncate">{item.name}</span>
                   </li>
                 ))}
               </ul>
