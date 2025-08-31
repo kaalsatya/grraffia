@@ -21,7 +21,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 interface FileSystemItem {
   name: string;
@@ -231,51 +238,57 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Popover open={isCreateFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
-                  <PopoverTrigger asChild>
+                <Sheet open={isCreateFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+                  <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <FolderPlus className="h-5 w-5" />
                       <span className="sr-only">Create Folder</span>
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="grid gap-4">
-                      <h4 className="font-medium leading-none">Create New Folder</h4>
-                      <div className="grid gap-2">
-                        <Input
-                          placeholder="Folder name"
-                          value={newItemName}
-                          onChange={(e) => setNewItemName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                        />
-                         <Button onClick={handleCreateFolder}>Create</Button>
-                      </div>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Create New Folder</SheetTitle>
+                      <SheetDescription>
+                        Enter a name for your new folder.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="grid gap-4 py-4">
+                      <Input
+                        placeholder="Folder name"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                      />
+                       <Button onClick={handleCreateFolder}>Create</Button>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </SheetContent>
+                </Sheet>
 
-                <Popover open={isCreateFileDialogOpen} onOpenChange={setCreateFileDialogOpen}>
-                  <PopoverTrigger asChild>
+                <Sheet open={isCreateFileDialogOpen} onOpenChange={setCreateFileDialogOpen}>
+                  <SheetTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <FilePlus className="h-5 w-5" />
                       <span className="sr-only">Create File</span>
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="grid gap-4">
-                      <h4 className="font-medium leading-none">Create New Board File</h4>
-                      <div className="grid gap-2">
-                        <Input
-                            placeholder="File name"
-                            value={newItemName}
-                            onChange={(e) => setNewItemName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
-                          />
-                        <Button onClick={handleCreateFile}>Create</Button>
-                      </div>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Create New Board File</SheetTitle>
+                       <SheetDescription>
+                        Enter a name for your new board file. The .board extension will be added automatically.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="grid gap-4 py-4">
+                      <Input
+                          placeholder="File name"
+                          value={newItemName}
+                          onChange={(e) => setNewItemName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
+                        />
+                      <Button onClick={handleCreateFile}>Create</Button>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </SheetContent>
+                </Sheet>
               </div>
             </CardHeader>
             <CardContent>
