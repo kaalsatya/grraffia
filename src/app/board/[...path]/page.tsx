@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -82,7 +82,7 @@ export default function BoardPage() {
     try {
       const content = JSON.stringify(data, null, 2);
       await writeFile(filePath, content);
-      setShowSaveErrorAlert(false); // Hide alert on successful save
+      setShowSaveErrorAlert(false);
       toast({ title: "Board Saved", description: "Your changes have been saved to the file." });
     } catch (err) {
       setShowSaveErrorAlert(true);
@@ -151,6 +151,30 @@ export default function BoardPage() {
   const handleThumbnailClick = (index: number) => {
     setCurrentSlideIndex(index);
   };
+
+  const handleAddText = () => {
+    if (!boardData) return;
+
+    const newText: TextItem = {
+      id: `text-${Date.now()}-${Math.random()}`,
+      content: 'New Text',
+      position: [50, 50],
+      font_size: 24,
+      width: 200,
+    };
+
+    const updatedSlides = boardData.slides.map((slide, index) => {
+      if (index === currentSlideIndex) {
+        return {
+          ...slide,
+          texts: [...slide.texts, newText],
+        };
+      }
+      return slide;
+    });
+    
+    setBoardData({ ...boardData, slides: updatedSlides });
+  };
   
   const currentSlide = boardData?.slides[currentSlideIndex];
 
@@ -175,11 +199,18 @@ export default function BoardPage() {
               <span className="sr-only">Save Board</span>
             </Button>
           </div>
-           <div className="w-[40px]" /> {/* Placeholder to balance the back button */}
         </header>
+
+        {/* Toolbar */}
+        <div className="fixed top-12 left-0 w-full h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
+          <Button variant="ghost" size="icon" onClick={handleAddText}>
+            <CaseSensitive className="h-5 w-5" />
+            <span className="sr-only">Add Text</span>
+          </Button>
+        </div>
         
         {/* Canvas Stage */}
-        <main className="fixed top-12 left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 48px - 80px)'}}>
+        <main className="fixed top-24 left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 96px - 80px)'}}>
             {error && <p className="text-destructive">{error}</p>}
             
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
