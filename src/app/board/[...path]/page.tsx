@@ -26,6 +26,7 @@ interface TextItem {
   content: string;
   position: [number, number];
   font_size: number;
+  width?: number;
 }
 
 interface ImageItem {
@@ -158,7 +159,8 @@ export default function BoardPage() {
       id: `text-${Date.now()}-${Math.random()}`,
       content: 'New Text',
       position: [50, 50], // Center
-      font_size: 36,
+      font_size: 24,
+      width: 200, // Default width
     };
 
     const updatedSlides = [...boardData.slides];
@@ -196,13 +198,24 @@ export default function BoardPage() {
   
   const handleTextMove = (textId: string, newPosition: [number, number]) => {
     const updatedData = updateTextItem(textId, { position: newPosition });
-    saveBoard(updatedData);
+    // We don't save on every move event for performance, only on pointer up, handled in EditableText
   };
   
   const handleTextResize = (textId: string, newFontSize: number) => {
     const updatedData = updateTextItem(textId, { font_size: newFontSize });
+     // We don't save on every resize event for performance, only on pointer up, handled in EditableText
+  };
+
+  const handleTextWidthChange = (textId: string, newWidth: number) => {
+    const updatedData = updateTextItem(textId, { width: newWidth });
+    // We don't save on every resize event for performance, only on pointer up, handled in EditableText
+  };
+
+  const handlePointerUp = (textId: string, finalState: Partial<TextItem>) => {
+    const updatedData = updateTextItem(textId, finalState);
     saveBoard(updatedData);
   };
+
 
   const handleDeleteText = (textId: string) => {
     if (!boardData) return;
@@ -265,10 +278,13 @@ export default function BoardPage() {
                             content={text.content}
                             position={text.position}
                             fontSize={text.font_size}
+                            width={text.width}
                             onSave={handleTextChange}
                             onMove={handleTextMove}
                             onResize={handleTextResize}
+                            onWidthChange={handleTextWidthChange}
                             onDelete={handleDeleteText}
+                            onPointerUp={handlePointerUp}
                             canvasBounds={document.getElementById('canvas-container')?.getBoundingClientRect()}
                          />
                     ))}
