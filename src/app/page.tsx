@@ -10,16 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import {
   Sheet,
@@ -29,6 +19,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 interface FileSystemItem {
   name: string;
@@ -52,7 +44,7 @@ export default function Home() {
   const [isCreateFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   
-  const [itemToDelete, setItemToDelete] = useState<FileSystemItem | null>(null);
+  const { toast } = useToast();
 
   const getDirectoryContents = async (handle: FileSystemDirectoryHandle | null) => {
     if (handle) {
@@ -106,6 +98,10 @@ export default function Home() {
         setNewItemName('');
         setCreateFileDialogOpen(false);
         await getDirectoryContents(currentDirectoryHandle);
+        toast({
+          title: "File Created",
+          description: `"${finalFileName}" has been created.`,
+        });
       } catch (err) {
         setError(`Could not create file: ${finalFileName}`);
         console.error(err);
@@ -120,6 +116,10 @@ export default function Home() {
         setNewItemName('');
         setCreateFolderDialogOpen(false);
         await getDirectoryContents(currentDirectoryHandle);
+        toast({
+            title: "Folder Created",
+            description: `"${newItemName}" has been created.`,
+        });
       } catch (err) {
         setError(`Could not create folder: ${newItemName}`);
         console.error(err);
@@ -127,12 +127,16 @@ export default function Home() {
     }
   };
   
-  const handleDeleteItem = async () => {
+  const handleDeleteItem = async (itemToDelete: FileSystemItem) => {
     if (currentDirectoryHandle && itemToDelete) {
       try {
         await currentDirectoryHandle.removeEntry(itemToDelete.name, { recursive: itemToDelete.kind === 'directory' });
-        setItemToDelete(null);
         await getDirectoryContents(currentDirectoryHandle);
+        toast({
+          title: `${itemToDelete.kind === 'directory' ? 'Folder' : 'File'} Deleted`,
+          description: `"${itemToDelete.name}" has been deleted.`,
+          action: <ToastAction altText="Undo">Undo</ToastAction>,
+        });
       } catch (err) {
         setError(`Could not delete: ${itemToDelete.name}`);
         console.error(err);
@@ -308,7 +312,7 @@ export default function Home() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setItemToDelete(item)} className="text-red-500 focus:text-red-500">
+                          <DropdownMenuItem onClick={() => handleDeleteItem(item)} className="text-red-500 focus:text-red-500">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
@@ -332,24 +336,6 @@ export default function Home() {
           )}
         </div>
       </main>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the {itemToDelete?.kind} "{itemToDelete?.name}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteItem} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
