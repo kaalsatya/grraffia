@@ -64,9 +64,11 @@ export default function Home() {
           This is your starting point. A blank canvas for your next great idea.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button onClick={handleMountClick}>
-            Mount Device Folder
-          </Button>
+          {!directoryHandle && (
+            <Button onClick={handleMountClick}>
+              Mount Device Folder
+            </Button>
+          )}
         </div>
 
         {error && (
@@ -74,25 +76,32 @@ export default function Home() {
         )}
 
         {directoryHandle && (
-          <Card className="mt-10 text-left">
-            <CardHeader>
-              <CardTitle>Mounted to folder "{directoryHandle.name}"</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {directoryContents.length > 0 ? (
-                <ul className="space-y-2">
-                  {directoryContents.map((item) => (
-                    <li key={item.name} className="flex items-center gap-2">
-                      {item.kind === 'directory' ? <Folder className="h-5 w-5 text-primary" /> : <File className="h-5 w-5 text-secondary-foreground" />}
-                      <span>{item.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>This folder is empty.</p>
-              )}
-            </CardContent>
-          </Card>
+          <>
+            <Card className="mt-10 text-left">
+              <CardHeader>
+                <CardTitle>Mounted to folder "{directoryHandle.name}"</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {directoryContents.length > 0 ? (
+                  <ul className="space-y-2">
+                    {directoryContents.map((item) => (
+                      <li key={item.name} className="flex items-center gap-2">
+                        {item.kind === 'directory' ? <Folder className="h-5 w-5 text-primary" /> : <File className="h-5 w-5 text-secondary-foreground" />}
+                        <span>{item.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>This folder is empty.</p>
+                )}
+              </CardContent>
+            </Card>
+            <div className="mt-6 flex items-center justify-center gap-x-6">
+              <Button onClick={handleMountClick}>
+                Mount Another Folder
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </main>
