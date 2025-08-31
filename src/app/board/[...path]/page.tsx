@@ -124,8 +124,8 @@ export default function BoardPage() {
     };
     const updatedData = { ...boardData, slides: [...boardData.slides, newSlide] };
     setBoardData(updatedData);
-    saveBoard(updatedData);
     setCurrentSlideIndex(updatedData.slides.length - 1);
+    saveBoard(updatedData);
   };
   
   const handleDeleteSlide = () => {
@@ -137,10 +137,10 @@ export default function BoardPage() {
       }));
       const newData = { ...boardData, slides: renumberedSlides };
       setBoardData(newData);
-      saveBoard(newData);
       
       const newIndex = Math.max(0, currentSlideIndex - 1);
       setCurrentSlideIndex(newIndex);
+      saveBoard(newData);
     }
   };
   
@@ -166,15 +166,15 @@ export default function BoardPage() {
     saveBoard(updatedData);
   };
 
-  const handleTextChange = (textId: string, newContent: string) => {
-    if (!boardData) return;
+  const updateTextItem = (textId: string, updates: Partial<TextItem>) => {
+     if (!boardData) return;
     
     const updatedSlides = boardData.slides.map((slide, index) => {
       if (index === currentSlideIndex) {
         return {
           ...slide,
           texts: slide.texts.map(text => 
-            text.id === textId ? { ...text, content: newContent } : text
+            text.id === textId ? { ...text, ...updates } : text
           ),
         };
       }
@@ -183,8 +183,40 @@ export default function BoardPage() {
 
     const updatedData = { ...boardData, slides: updatedSlides };
     setBoardData(updatedData);
+    return updatedData;
+  }
+
+  const handleTextChange = (textId: string, newContent: string) => {
+    const updatedData = updateTextItem(textId, { content: newContent });
     saveBoard(updatedData);
   };
+  
+  const handleTextMove = (textId: string, newPosition: [number, number]) => {
+    const updatedData = updateTextItem(textId, { position: newPosition });
+    saveBoard(updatedData);
+  };
+  
+  const handleTextResize = (textId: string, newFontSize: number) => {
+    const updatedData = updateTextItem(textId, { font_size: newFontSize });
+    saveBoard(updatedData);
+  };
+
+  const handleDeleteText = (textId: string) => {
+    if (!boardData) return;
+      const updatedSlides = boardData.slides.map((slide, index) => {
+        if (index === currentSlideIndex) {
+          return {
+            ...slide,
+            texts: slide.texts.filter(text => text.id !== textId),
+          };
+        }
+        return slide;
+      });
+      const updatedData = { ...boardData, slides: updatedSlides };
+      setBoardData(updatedData);
+      saveBoard(updatedData);
+  };
+
 
   const currentSlide = boardData?.slides[currentSlideIndex];
 
@@ -222,7 +254,7 @@ export default function BoardPage() {
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
             {boardData && currentSlide ? (
-                 <div className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                 <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
                     {currentSlide.texts.map((text) => (
                          <EditableText
                             key={text.id}
@@ -231,6 +263,10 @@ export default function BoardPage() {
                             position={text.position}
                             fontSize={text.font_size}
                             onSave={handleTextChange}
+                            onMove={handleTextMove}
+                            onResize={handleTextResize}
+                            onDelete={handleDeleteText}
+                            canvasBounds={document.getElementById('canvas-container')?.getBoundingClientRect()}
                          />
                     ))}
                  </div>
