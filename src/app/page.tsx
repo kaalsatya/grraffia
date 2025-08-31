@@ -20,6 +20,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
+import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 
 interface FileSystemItem {
   name: string;
@@ -173,6 +174,7 @@ export default function Home() {
   if (showWelcome) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+        <BackgroundAnimation />
         <div className="mx-auto max-w-4xl w-full text-center">
           <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
             Welcome to grraffia
@@ -193,6 +195,7 @@ export default function Home() {
   if (!rootDirectoryHandle) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
+        <BackgroundAnimation />
         <div className="mx-auto max-w-4xl w-full text-center">
           <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
             Your Workspace
@@ -215,9 +218,10 @@ export default function Home() {
 
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center justify-start bg-background p-8 pt-24">
+      <BackgroundAnimation />
+      <main className="flex min-h-screen flex-col items-center justify-start bg-transparent p-8 pt-24">
         <div className="mx-auto max-w-4xl w-full">
-          <Card className="text-left">
+          <Card className="text-left bg-card/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className="flex items-center gap-2 overflow-hidden">
                 {path.length > 1 && (
