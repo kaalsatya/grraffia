@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, CaseSensitive, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -19,7 +19,6 @@ import {
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { EditableText } from '@/components/EditableText';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -100,7 +99,6 @@ export default function BoardPage() {
         const fileContent = await readFile(filePath);
         const data = JSON.parse(fileContent) as BoardData;
         
-        // Add unique IDs to text items if they don't have one
         const dataWithIds = {
           ...data,
           slides: data.slides.map(slide => ({
@@ -153,83 +151,7 @@ export default function BoardPage() {
   const handleThumbnailClick = (index: number) => {
     setCurrentSlideIndex(index);
   };
-
-  const handleAddText = () => {
-    if (!boardData) return;
-
-    const newText: TextItem = {
-      id: `text-${Date.now()}-${Math.random()}`,
-      content: 'New Text',
-      position: [50, 50], // Center
-      font_size: 24,
-      width: 200, // Default width
-    };
-
-    const updatedSlides = [...boardData.slides];
-    updatedSlides[currentSlideIndex].texts.push(newText);
-    const updatedData = { ...boardData, slides: updatedSlides };
-
-    setBoardData(updatedData);
-  };
-
-  const updateTextItem = (textId: string, updates: Partial<TextItem>) => {
-     if (!boardData) return;
-    
-    const updatedSlides = boardData.slides.map((slide, index) => {
-      if (index === currentSlideIndex) {
-        return {
-          ...slide,
-          texts: slide.texts.map(text => 
-            text.id === textId ? { ...text, ...updates } : text
-          ),
-        };
-      }
-      return slide;
-    });
-
-    const updatedData = { ...boardData, slides: updatedSlides };
-    setBoardData(updatedData);
-    return updatedData;
-  }
-
-  const handleTextChange = (textId: string, newContent: string) => {
-    updateTextItem(textId, { content: newContent });
-  };
   
-  const handleTextMove = (textId: string, newPosition: [number, number]) => {
-    updateTextItem(textId, { position: newPosition });
-  };
-  
-  const handleTextResize = (textId: string, newFontSize: number) => {
-    updateTextItem(textId, { font_size: newFontSize });
-  };
-
-  const handleTextWidthChange = (textId: string, newWidth: number) => {
-    updateTextItem(textId, { width: newWidth });
-  };
-
-  const handlePointerUp = (textId: string, finalState: Partial<TextItem>) => {
-    // This now just updates state. Saving is manual.
-    updateTextItem(textId, finalState);
-  };
-
-
-  const handleDeleteText = (textId: string) => {
-    if (!boardData) return;
-      const updatedSlides = boardData.slides.map((slide, index) => {
-        if (index === currentSlideIndex) {
-          return {
-            ...slide,
-            texts: slide.texts.filter(text => text.id !== textId),
-          };
-        }
-        return slide;
-      });
-      const updatedData = { ...boardData, slides: updatedSlides };
-      setBoardData(updatedData);
-  };
-
-
   const currentSlide = boardData?.slides[currentSlideIndex];
 
   return (
@@ -256,17 +178,8 @@ export default function BoardPage() {
            <div className="w-[40px]" /> {/* Placeholder to balance the back button */}
         </header>
         
-        {/* Toolbar */}
-        <div className="fixed top-12 left-0 w-full h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
-           <Button variant="ghost" size="icon" onClick={handleAddText}>
-              <CaseSensitive className="h-5 w-5" />
-              <span className="sr-only">Add Text</span>
-            </Button>
-        </div>
-
-
         {/* Canvas Stage */}
-        <main className="fixed top-24 left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 96px - 80px)'}}>
+        <main className="fixed top-12 left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 48px - 80px)'}}>
             {error && <p className="text-destructive">{error}</p>}
             
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
@@ -274,21 +187,22 @@ export default function BoardPage() {
             {boardData && currentSlide ? (
                  <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
                     {currentSlide.texts.map((text) => (
-                         <EditableText
+                         <div
                             key={text.id}
-                            id={text.id}
-                            content={text.content}
-                            position={text.position}
-                            fontSize={text.font_size}
-                            width={text.width}
-                            onSave={handleTextChange}
-                            onMove={handleTextMove}
-                            onResize={handleTextResize}
-                            onWidthChange={handleTextWidthChange}
-                            onDelete={handleDeleteText}
-                            onPointerUp={handlePointerUp}
-                            canvasBounds={document.getElementById('canvas-container')?.getBoundingClientRect()}
-                         />
+                            style={{
+                                position: 'absolute',
+                                left: `${text.position[0]}%`,
+                                top: `${text.position[1]}%`,
+                                transform: 'translate(-50%, -50%)',
+                                fontSize: `${text.font_size}px`,
+                                width: text.width ? `${text.width}px` : 'auto',
+                                color: 'black',
+                                padding: '4px',
+                                wordWrap: 'break-word',
+                            }}
+                         >
+                            {text.content}
+                         </div>
                     ))}
                  </div>
             ) : (
