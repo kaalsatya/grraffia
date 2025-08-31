@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, CaseSensitive } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, CaseSensitive, Save } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -20,6 +20,8 @@ import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { EditableText } from '@/components/EditableText';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface TextItem {
   id: string;
@@ -48,6 +50,7 @@ interface BoardData {
 export default function BoardPage() {
   const router = useRouter();
   const params = useParams();
+  const { toast } = useToast();
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -81,11 +84,12 @@ export default function BoardPage() {
       const content = JSON.stringify(data, null, 2);
       await writeFile(filePath, content);
       setShowSaveErrorAlert(false); // Hide alert on successful save
+      toast({ title: "Board Saved", description: "Your changes have been saved to the file." });
     } catch (err) {
       setShowSaveErrorAlert(true);
       console.error(err);
     }
-  }, [getFilePath, writeFile]);
+  }, [getFilePath, writeFile, toast]);
 
   useEffect(() => {
     const loadBoard = async () => {
@@ -129,7 +133,6 @@ export default function BoardPage() {
     const updatedData = { ...boardData, slides: [...boardData.slides, newSlide] };
     setBoardData(updatedData);
     setCurrentSlideIndex(updatedData.slides.length - 1);
-    saveBoard(updatedData);
   };
   
   const handleDeleteSlide = () => {
@@ -144,7 +147,6 @@ export default function BoardPage() {
       
       const newIndex = Math.max(0, currentSlideIndex - 1);
       setCurrentSlideIndex(newIndex);
-      saveBoard(newData);
     }
   };
   
@@ -168,7 +170,6 @@ export default function BoardPage() {
     const updatedData = { ...boardData, slides: updatedSlides };
 
     setBoardData(updatedData);
-    saveBoard(updatedData);
   };
 
   const updateTextItem = (textId: string, updates: Partial<TextItem>) => {
@@ -192,28 +193,24 @@ export default function BoardPage() {
   }
 
   const handleTextChange = (textId: string, newContent: string) => {
-    const updatedData = updateTextItem(textId, { content: newContent });
-    saveBoard(updatedData);
+    updateTextItem(textId, { content: newContent });
   };
   
   const handleTextMove = (textId: string, newPosition: [number, number]) => {
     updateTextItem(textId, { position: newPosition });
-    // We don't save on every move event for performance, only on pointer up, handled in EditableText
   };
   
   const handleTextResize = (textId: string, newFontSize: number) => {
     updateTextItem(textId, { font_size: newFontSize });
-     // We don't save on every resize event for performance, only on pointer up, handled in EditableText
   };
 
   const handleTextWidthChange = (textId: string, newWidth: number) => {
     updateTextItem(textId, { width: newWidth });
-    // We don't save on every resize event for performance, only on pointer up, handled in EditableText
   };
 
   const handlePointerUp = (textId: string, finalState: Partial<TextItem>) => {
-    const updatedData = updateTextItem(textId, finalState);
-    saveBoard(updatedData);
+    // This now just updates state. Saving is manual.
+    updateTextItem(textId, finalState);
   };
 
 
@@ -230,7 +227,6 @@ export default function BoardPage() {
       });
       const updatedData = { ...boardData, slides: updatedSlides };
       setBoardData(updatedData);
-      saveBoard(updatedData);
   };
 
 
@@ -250,6 +246,12 @@ export default function BoardPage() {
             <h1 className="text-lg font-semibold truncate">
               {getFileName()}
             </h1>
+          </div>
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => saveBoard(boardData)}>
+              <Save className="h-5 w-5" />
+              <span className="sr-only">Save Board</span>
+            </Button>
           </div>
            <div className="w-[40px]" /> {/* Placeholder to balance the back button */}
         </header>
