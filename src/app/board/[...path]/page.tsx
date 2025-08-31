@@ -141,13 +141,15 @@ export default function BoardPage() {
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent">
         {/* Header */}
         <header className="fixed top-0 left-0 w-full h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
-          <Button variant="ghost" onClick={() => router.push('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-lg font-semibold truncate">
-            {getFileName()}
-          </h1>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => router.push('/')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <h1 className="text-lg font-semibold truncate">
+              {getFileName()}
+            </h1>
+          </div>
            <div className="w-[88px]" /> {/* Placeholder to balance the back button */}
         </header>
 
