@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Folder, File, FolderPlus, FilePlus, MoreVertical, Trash2, ArrowLeft } from 'lucide-react';
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface FileSystemItem {
   name: string;
@@ -231,14 +231,51 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setCreateFolderDialogOpen(true)}>
-                  <FolderPlus className="h-5 w-5" />
-                  <span className="sr-only">Create Folder</span>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setCreateFileDialogOpen(true)}>
-                  <FilePlus className="h-5 w-5" />
-                   <span className="sr-only">Create File</span>
-                </Button>
+                <Popover open={isCreateFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <FolderPlus className="h-5 w-5" />
+                      <span className="sr-only">Create Folder</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="grid gap-4">
+                      <h4 className="font-medium leading-none">Create New Folder</h4>
+                      <div className="grid gap-2">
+                        <Input
+                          placeholder="Folder name"
+                          value={newItemName}
+                          onChange={(e) => setNewItemName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                        />
+                         <Button onClick={handleCreateFolder}>Create</Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <Popover open={isCreateFileDialogOpen} onOpenChange={setCreateFileDialogOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <FilePlus className="h-5 w-5" />
+                      <span className="sr-only">Create File</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="grid gap-4">
+                      <h4 className="font-medium leading-none">Create New Board File</h4>
+                      <div className="grid gap-2">
+                        <Input
+                            placeholder="File name"
+                            value={newItemName}
+                            onChange={(e) => setNewItemName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
+                          />
+                        <Button onClick={handleCreateFile}>Create</Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </CardHeader>
             <CardContent>
@@ -282,48 +319,6 @@ export default function Home() {
           )}
         </div>
       </main>
-      
-      {/* Create New File Dialog */}
-      <Dialog open={isCreateFileDialogOpen} onOpenChange={setCreateFileDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Board File</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder="File name"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCreateFileDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" onClick={handleCreateFile}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Create New Folder Dialog */}
-      <Dialog open={isCreateFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder="Folder name"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCreateFolderDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" onClick={handleCreateFolder}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
