@@ -50,6 +50,8 @@ export default function BoardPage() {
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
+
 
   const context = useContext(WorkspaceContext);
   if (!context) {
@@ -77,8 +79,9 @@ export default function BoardPage() {
     try {
       const content = JSON.stringify(data, null, 2);
       await writeFile(filePath, content);
+      setShowSaveErrorAlert(false); // Hide alert on successful save
     } catch (err) {
-      setError('Failed to save board data.');
+      setShowSaveErrorAlert(true);
       console.error(err);
     }
   }, [getFilePath, writeFile]);
@@ -331,6 +334,20 @@ export default function BoardPage() {
           </footer>
         )}
       </div>
+      <AlertDialog open={showSaveErrorAlert} onOpenChange={setShowSaveErrorAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Failed</AlertDialogTitle>
+            <AlertDialogDescription>
+              Could not save your changes to the file. Please check your permissions and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => saveBoard(boardData)}>Retry</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
