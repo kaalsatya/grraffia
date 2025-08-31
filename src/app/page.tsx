@@ -52,7 +52,9 @@ export default function Home() {
       try {
         const contents: FileSystemItem[] = [];
         for await (const entry of handle.values()) {
-          contents.push({ name: entry.name, kind: entry.kind });
+          if (entry.kind === 'directory' || (entry.kind === 'file' && entry.name.endsWith('.board'))) {
+            contents.push({ name: entry.name, kind: entry.kind });
+          }
         }
         setDirectoryContents(contents.sort((a, b) => {
           if (a.kind === 'directory' && b.kind === 'file') return -1;
@@ -91,13 +93,14 @@ export default function Home() {
 
   const handleCreateFile = async () => {
     if (currentDirectoryHandle && newItemName) {
+      const finalFileName = newItemName.endsWith('.board') ? newItemName : `${newItemName}.board`;
       try {
-        await currentDirectoryHandle.getFileHandle(newItemName, { create: true });
+        await currentDirectoryHandle.getFileHandle(finalFileName, { create: true });
         setNewItemName('');
         setCreateFileDialogOpen(false);
         await getDirectoryContents(currentDirectoryHandle);
       } catch (err) {
-        setError(`Could not create file: ${newItemName}`);
+        setError(`Could not create file: ${finalFileName}`);
         console.error(err);
       }
     }
@@ -284,7 +287,7 @@ export default function Home() {
       <Dialog open={isCreateFileDialogOpen} onOpenChange={setCreateFileDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New File</DialogTitle>
+            <DialogTitle>Create New Board File</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Input
