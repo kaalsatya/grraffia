@@ -20,7 +20,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
 
 interface FileSystemItem {
   name: string;
@@ -135,7 +134,6 @@ export default function Home() {
         toast({
           title: `${itemToDelete.kind === 'directory' ? 'Folder' : 'File'} Deleted`,
           description: `"${itemToDelete.name}" has been deleted.`,
-          action: <ToastAction altText="Undo">Undo</ToastAction>,
         });
       } catch (err) {
         setError(`Could not delete: ${itemToDelete.name}`);
