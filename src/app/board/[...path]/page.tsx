@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
@@ -15,7 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { WorkspaceContext } from '@/context/WorkspaceContext';
 
 interface TextItem {
   content: string;
@@ -46,46 +47,55 @@ export default function BoardPage() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const context = useContext(WorkspaceContext);
+  if (!context) {
+    throw new Error("BoardPage must be used within a WorkspaceProvider");
+  }
+  const { readFile, writeFile, rootDirectoryHandle } = context;
+
+  const getFilePath = useCallback(() => {
+    if (!params.path) return null;
+    const path = Array.isArray(params.path) ? params.path.join('/') : params.path;
+    return decodeURIComponent(path);
+  }, [params.path]);
+
+  const getFileName = () => {
+    const filePath = getFilePath();
+    if (!filePath) return 'Board';
+    const parts = filePath.split('/');
+    return parts[parts.length - 1];
+  };
+
+  const saveBoard = useCallback(async (data: BoardData) => {
+    const filePath = getFilePath();
+    if (!filePath) return;
+    try {
+      const content = JSON.stringify(data, null, 2);
+      await writeFile(filePath, content);
+    } catch (err) {
+      setError('Failed to save board data.');
+      console.error(err);
+    }
+  }, [getFilePath, writeFile]);
+
   useEffect(() => {
     const loadBoard = async () => {
-      // The actual file loading logic will be implemented in a future step.
-      // For now, we'll use placeholder data to confirm the page works.
+      const filePath = getFilePath();
+      if (!filePath || !rootDirectoryHandle) return;
+
       try {
-        // This is a placeholder to simulate loading.
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const fileContent = `{
-          "slides": [
-            {
-              "slide_number": 1,
-              "texts": [
-                { "content": "Welcome to your presentation!", "position": [50, 50], "font_size": 48 }
-              ],
-              "images": []
-            }
-          ]
-        }`;
+        const fileContent = await readFile(filePath);
         const data = JSON.parse(fileContent) as BoardData;
         setBoardData(data);
-
       } catch (err) {
         setError('Failed to load board data.');
         console.error(err);
       }
     };
 
-    if (params.path) {
-      loadBoard();
-    }
-  }, [params.path]);
+    loadBoard();
+  }, [getFilePath, readFile, rootDirectoryHandle]);
 
-  const getFileName = () => {
-    if (!params.path) return 'Board';
-    const path = Array.isArray(params.path) ? params.path.join('/') : params.path;
-    const decodedPath = decodeURIComponent(path);
-    const parts = decodedPath.split('/');
-    return parts[parts.length - 1];
-  };
 
   const currentSlide = boardData?.slides[currentSlideIndex];
 
@@ -110,7 +120,9 @@ export default function BoardPage() {
             images: [],
         };
         const updatedSlides = [...prevData.slides, newSlide];
-        return { ...prevData, slides: updatedSlides };
+        const newData = { ...prevData, slides: updatedSlides };
+        saveBoard(newData);
+        return newData;
     });
     setCurrentSlideIndex(boardData ? boardData.slides.length : 0);
   };
@@ -120,14 +132,15 @@ export default function BoardPage() {
         setBoardData(prevData => {
             if (!prevData) return null;
             const updatedSlides = prevData.slides.filter((_, index) => index !== currentSlideIndex);
-            // Re-number slides
             const renumberedSlides = updatedSlides.map((slide, index) => ({
                 ...slide,
                 slide_number: index + 1
             }));
-            return { ...prevData, slides: renumberedSlides };
+            const newData = { ...prevData, slides: renumberedSlides };
+            saveBoard(newData);
+            setCurrentSlideIndex(prevIndex => Math.max(0, prevIndex - 1));
+            return newData;
         });
-        setCurrentSlideIndex(prevIndex => Math.max(0, prevIndex - 1));
     }
   };
 

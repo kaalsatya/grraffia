@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -22,17 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
-
-interface FileSystemItem {
-  name: string;
-  kind: 'file' | 'directory';
-  handle: FileSystemHandle;
-}
-
-interface PathSegment {
-  name: string;
-  handle: FileSystemDirectoryHandle;
-}
+import { WorkspaceContext, FileSystemItem } from '@/context/WorkspaceContext';
 
 const initialBoardContent = `{
   "slides": [
@@ -40,11 +30,12 @@ const initialBoardContent = `{
       "slide_number": 1,
       "texts": [
         {
-          "content": "Hello World",
-          "position": [0, 0],
-          "font_size": 20
+          "content": "Welcome to your presentation!",
+          "position": [50, 50],
+          "font_size": 48
         }
-      ]
+      ],
+      "images": []
     }
   ]
 }`;
@@ -52,11 +43,24 @@ const initialBoardContent = `{
 export default function Home() {
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(true);
-  const [rootDirectoryHandle, setRootDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
-  const [currentDirectoryHandle, setCurrentDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
-  const [directoryContents, setDirectoryContents] = useState<FileSystemItem[]>([]);
-  const [path, setPath] = useState<PathSegment[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  
+  const context = useContext(WorkspaceContext);
+  if (!context) {
+    throw new Error("Home component must be used within a WorkspaceProvider");
+  }
+  const {
+    rootDirectoryHandle,
+    mount,
+    path,
+    directoryContents,
+    handleBreadcrumbClick,
+    handleItemClick: contextHandleItemClick,
+    handleBackClick,
+    createFile,
+    createFolder,
+    deleteItem,
+    error,
+  } = context;
 
   const [isCreateFileDialogOpen, setCreateFileDialogOpen] = useState(false);
   const [isCreateFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
@@ -64,138 +68,39 @@ export default function Home() {
   
   const { toast } = useToast();
 
-  const getDirectoryContents = async (handle: FileSystemDirectoryHandle | null) => {
-    if (handle) {
-      try {
-        const contents: FileSystemItem[] = [];
-        for await (const entry of handle.values()) {
-          if (entry.kind === 'directory' || (entry.kind === 'file' && entry.name.endsWith('.board'))) {
-            contents.push({ name: entry.name, kind: entry.kind, handle: entry });
-          }
-        }
-        setDirectoryContents(contents.sort((a, b) => {
-          if (a.kind === 'directory' && b.kind === 'file') return -1;
-          if (a.kind === 'file' && b.kind === 'directory') return 1;
-          return a.name.localeCompare(b.name);
-        }));
-      } catch (err) {
-        setError('Could not read directory contents.');
-        console.error(err);
-      }
-    }
-  };
-
-  const handleMountClick = async () => {
-    setError(null);
-    setDirectoryContents([]);
-    try {
-      if ('showDirectoryPicker' in window) {
-        const handle = await window.showDirectoryPicker();
-        setRootDirectoryHandle(handle);
-        setCurrentDirectoryHandle(handle);
-        setPath([{ name: handle.name, handle }]);
-        await getDirectoryContents(handle);
-      } else {
-        setError('Your browser does not support the File System Access API.');
-      }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        // User cancelled the folder selection
-      } else {
-        setError('An error occurred while trying to access the folder.');
-        console.error(err);
-      }
-    }
-  };
-
   const handleCreateFile = async () => {
-    if (currentDirectoryHandle && newItemName) {
-      const finalFileName = newItemName.endsWith('.board') ? newItemName : `${newItemName}.board`;
-      try {
-        const fileHandle = await currentDirectoryHandle.getFileHandle(finalFileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        await writable.write(initialBoardContent);
-        await writable.close();
-        
-        setNewItemName('');
-        setCreateFileDialogOpen(false);
-        await getDirectoryContents(currentDirectoryHandle);
-        toast({
-          title: "File Created",
-          description: `"${finalFileName}" has been created.`,
-        });
-      } catch (err) {
-        setError(`Could not create file: ${finalFileName}`);
-        console.error(err);
-      }
-    }
+    const finalFileName = newItemName.endsWith('.board') ? newItemName : `${newItemName}.board`;
+    await createFile(finalFileName, initialBoardContent);
+    setNewItemName('');
+    setCreateFileDialogOpen(false);
+    toast({
+      title: "File Created",
+      description: `"${finalFileName}" has been created.`,
+    });
   };
 
   const handleCreateFolder = async () => {
-    if (currentDirectoryHandle && newItemName) {
-      try {
-        await currentDirectoryHandle.getDirectoryHandle(newItemName, { create: true });
-        setNewItemName('');
-        setCreateFolderDialogOpen(false);
-        await getDirectoryContents(currentDirectoryHandle);
-        toast({
-            title: "Folder Created",
-            description: `"${newItemName}" has been created.`,
-        });
-      } catch (err) {
-        setError(`Could not create folder: ${newItemName}`);
-        console.error(err);
-      }
-    }
+    await createFolder(newItemName);
+    setNewItemName('');
+    setCreateFolderDialogOpen(false);
+    toast({
+      title: "Folder Created",
+      description: `"${newItemName}" has been created.`,
+    });
   };
   
   const handleDeleteItem = async (itemToDelete: FileSystemItem) => {
-    if (currentDirectoryHandle && itemToDelete) {
-      try {
-        await currentDirectoryHandle.removeEntry(itemToDelete.name, { recursive: itemToDelete.kind === 'directory' });
-        await getDirectoryContents(currentDirectoryHandle);
-        toast({
-          title: `${itemToDelete.kind === 'directory' ? 'Folder' : 'File'} Deleted`,
-          description: `"${itemToDelete.name}" has been deleted.`,
-        });
-      } catch (err) {
-        setError(`Could not delete: ${itemToDelete.name}`);
-        console.error(err);
-      }
-    }
+    await deleteItem(itemToDelete);
+    toast({
+      title: `${itemToDelete.kind === 'directory' ? 'Folder' : 'File'} Deleted`,
+      description: `"${itemToDelete.name}" has been deleted.`,
+    });
   };
 
-  const handleItemClick = async (item: FileSystemItem) => {
-    if (item.kind === 'directory' && currentDirectoryHandle) {
-      try {
-        const newHandle = await currentDirectoryHandle.getDirectoryHandle(item.name);
-        setCurrentDirectoryHandle(newHandle);
-        setPath(prevPath => [...prevPath, { name: newHandle.name, handle: newHandle }]);
-        await getDirectoryContents(newHandle);
-      } catch (err) {
-        setError(`Could not open folder: ${item.name}`);
-        console.error(err);
-      }
-    } else if (item.kind === 'file') {
-        // Create the full path from the root handle
-        const pathParts = path.slice(1).map(p => p.name); // Exclude the root handle name
-        pathParts.push(item.name);
-        const filePath = pathParts.join('/');
-        router.push(`/board/${encodeURIComponent(filePath)}`);
-    }
-  };
-
-  const handleBreadcrumbClick = (index: number) => {
-    const newPath = path.slice(0, index + 1);
-    const newHandle = newPath[newPath.length - 1].handle;
-    setPath(newPath);
-    setCurrentDirectoryHandle(newHandle);
-    getDirectoryContents(newHandle);
-  };
-  
-  const handleBackClick = () => {
-    if (path.length > 1) {
-      handleBreadcrumbClick(path.length - 2);
+  const handleItemClick = (item: FileSystemItem) => {
+    const fullPath = contextHandleItemClick(item);
+    if (item.kind === 'file' && fullPath) {
+        router.push(`/board/${encodeURIComponent(fullPath)}`);
     }
   }
 
@@ -235,7 +140,7 @@ export default function Home() {
               Get started by selecting your working folder.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button onClick={handleMountClick} size="lg">
+              <Button onClick={mount} size="lg">
                 Mount Folder
               </Button>
             </div>
@@ -361,7 +266,7 @@ export default function Home() {
             </CardContent>
           </Card>
           <div className="mt-6 flex items-center justify-center gap-x-6">
-            <Button onClick={handleMountClick}>
+            <Button onClick={mount}>
               Mount Another Folder
             </Button>
           </div>
