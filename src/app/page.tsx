@@ -76,7 +76,7 @@ export default function Home() {
         {directoryHandle && (
           <Card className="mt-10 text-left">
             <CardHeader>
-              <CardTitle>Mounted Folder: {directoryHandle.name}</CardTitle>
+              <CardTitle>Mounted to folder "{directoryHandle.name}"</CardTitle>
             </CardHeader>
             <CardContent>
               {directoryContents.length > 0 ? (
