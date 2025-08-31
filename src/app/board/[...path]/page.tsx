@@ -20,7 +20,6 @@ import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 
 interface TextItem {
@@ -113,18 +112,6 @@ export default function BoardPage() {
 
   const currentSlide = boardData?.slides[currentSlideIndex];
 
-  const handleNextSlide = () => {
-    if (boardData && currentSlideIndex < boardData.slides.length - 1) {
-      carouselApi?.scrollNext()
-    }
-  };
-
-  const handlePrevSlide = () => {
-    if (currentSlideIndex > 0) {
-      carouselApi?.scrollPrev()
-    }
-  };
-
   const handleAddSlide = () => {
     const newSlide: Slide = {
         slide_number: (boardData?.slides.length ?? 0) + 1,
@@ -132,7 +119,7 @@ export default function BoardPage() {
         images: [],
     };
     const updatedSlides = boardData ? [...boardData.slides, newSlide] : [newSlide];
-    const newData = { slides: updatedSlides };
+    const newData = { ...boardData, slides: updatedSlides };
     setBoardData(newData);
     saveBoard(newData);
     
@@ -154,10 +141,10 @@ export default function BoardPage() {
       saveBoard(newData);
       
       const newIndex = Math.max(0, currentSlideIndex - 1);
-      setCurrentSlideIndex(newIndex);
       // Use a timeout to ensure the UI has updated before scrolling
       setTimeout(() => {
         carouselApi?.scrollTo(newIndex, true);
+        setCurrentSlideIndex(newIndex);
       }, 100);
     }
   };
@@ -170,7 +157,7 @@ export default function BoardPage() {
     <>
       <BackgroundAnimation />
       <div className="min-h-screen bg-transparent flex flex-col">
-        <header className="flex items-center justify-between p-4 text-foreground shrink-0">
+        <header className="flex items-center justify-between p-4 text-foreground shrink-0 z-10">
           <Button variant="ghost" onClick={() => router.push('/')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Files
@@ -178,7 +165,7 @@ export default function BoardPage() {
           <h1 className="text-xl font-bold text-center truncate flex-1 mx-4">
             {getFileName()}
           </h1>
-           <div className="w-[130px] hidden sm:block" /> {/* Placeholder to balance the back button */}
+           <div className="w-[150px]" /> {/* Placeholder to balance the back button */}
         </header>
 
         <main className="flex-grow flex items-center justify-center p-4">
@@ -187,7 +174,7 @@ export default function BoardPage() {
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
             {boardData && currentSlide ? (
-                 <div className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                 <div className="w-full max-w-7xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
                     {currentSlide.texts.map((text, index) => (
                          <div
                             key={index}
@@ -211,66 +198,64 @@ export default function BoardPage() {
         </main>
         
         {boardData && (
-          <footer className="shrink-0 pb-4 px-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 text-foreground">
-                <Button variant="outline" size="icon" onClick={handlePrevSlide} disabled={currentSlideIndex === 0}>
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-            
-                <Carousel setApi={setCarouselApi} className="w-full max-w-xs sm:max-w-md md:max-w-2xl">
-                    <CarouselContent>
-                        {boardData.slides.map((slide, index) => (
-                        <CarouselItem key={index} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
-                            <div className="p-1">
-                                <Card
-                                    onClick={() => handleThumbnailClick(index)}
-                                    className={cn(
-                                        "cursor-pointer transition-all border-2",
-                                        index === currentSlideIndex ? "border-primary" : "border-transparent hover:border-muted-foreground/50"
-                                    )}
-                                >
-                                    <CardContent className="flex flex-col items-center justify-center aspect-video p-2 bg-white/90">
-                                       <span className="text-xs text-black/70">
-                                         {slide.texts.length > 0 ? slide.texts[0].content.substring(0, 15) + '...' : ''}
-                                       </span>
-                                    </CardContent>
-                                </Card>
-                                <p className="text-center text-xs mt-1">{index + 1}</p>
-                            </div>
-                        </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                </Carousel>
+          <footer className="shrink-0 p-4 bg-background/80 backdrop-blur-sm border-t border-border">
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-foreground">
+                <div className="flex-grow">
+                    <Carousel setApi={setCarouselApi} className="w-full">
+                        <CarouselContent>
+                            {boardData.slides.map((slide, index) => (
+                            <CarouselItem key={index} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                                <div className="p-1">
+                                    <Card
+                                        onClick={() => handleThumbnailClick(index)}
+                                        className={cn(
+                                            "cursor-pointer transition-all border-2",
+                                            index === currentSlideIndex ? "border-primary" : "border-transparent hover:border-muted-foreground/50"
+                                        )}
+                                    >
+                                        <CardContent className="flex flex-col items-center justify-center aspect-video p-2 bg-white/90">
+                                            <span className="text-xs text-black/70 truncate">
+                                                {slide.texts.length > 0 ? slide.texts[0].content : `Slide ${index + 1}`}
+                                            </span>
+                                        </CardContent>
+                                    </Card>
+                                    <p className="text-center text-xs mt-1">{index + 1}</p>
+                                </div>
+                            </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                    </Carousel>
+                </div>
 
-                <Button variant="outline" size="icon" onClick={handleNextSlide} disabled={!boardData || currentSlideIndex === boardData.slides.length - 1}>
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
-
-                <div className="mx-2 sm:mx-4 h-6 border-l border-border" />
+                <div className="mx-2 h-16 border-l border-border" />
                 
-                <Button variant="outline" size="icon" onClick={handleAddSlide}>
-                    <Plus className="h-4 w-4" />
-                </Button>
-                
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" disabled={!boardData || boardData.slides.length <= 1}>
-                        <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete slide {currentSlideIndex + 1}. This action cannot be undone.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteSlide}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex flex-col gap-2">
+                    <Button variant="outline" size="icon" onClick={handleAddSlide}>
+                        <Plus className="h-4 w-4" />
+                        <span className="sr-only">Add Slide</span>
+                    </Button>
+                    
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" disabled={!boardData || boardData.slides.length <= 1}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete Slide</span>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete slide {currentSlideIndex + 1}. This action cannot be undone.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteSlide}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </div>
           </footer>
         )}
