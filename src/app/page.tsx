@@ -249,13 +249,13 @@ export default function Home() {
                       </button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                             <MoreVertical className="h-4 w-4" />
                             <span className="sr-only">More options</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setItemToDelete(item)} className="text-red-500">
+                          <DropdownMenuItem onClick={() => setItemToDelete(item)} className="text-red-500 focus:text-red-500">
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
