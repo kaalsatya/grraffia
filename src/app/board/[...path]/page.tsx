@@ -303,7 +303,7 @@ export default function BoardPage() {
             <AlertDialogTitle>Save Failed</AlertDialogTitle>
             <AlertDialogDescription>
               Could not save your changes to the file. Please check your permissions and try again.
-            </AlertDialogDescription>
+            </AlexDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
