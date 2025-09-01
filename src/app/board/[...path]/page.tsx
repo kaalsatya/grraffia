@@ -206,49 +206,9 @@ export default function BoardPage() {
           </div>
         </header>
 
-        {/* Toolbar */}
-        <div className="fixed top-12 left-0 w-full h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
-          <Button variant="ghost" size="icon" onClick={handleAddText}>
-            <CaseSensitive className="h-5 w-5" />
-            <span className="sr-only">Add Text</span>
-          </Button>
-        </div>
-        
-        {/* Canvas Stage */}
-        <main className="fixed top-24 left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 96px - 80px)'}}>
-            {error && <p className="text-destructive">{error}</p>}
-            
-            {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
-
-            {boardData && currentSlide ? (
-                 <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
-                    {currentSlide.texts.map((text) => (
-                         <div
-                            key={text.id}
-                            style={{
-                                position: 'absolute',
-                                left: `${text.position[0]}%`,
-                                top: `${text.position[1]}%`,
-                                transform: 'translate(-50%, -50%)',
-                                fontSize: `${text.font_size}px`,
-                                width: text.width ? `${text.width}px` : 'auto',
-                                color: 'black',
-                                padding: '4px',
-                                wordWrap: 'break-word',
-                            }}
-                         >
-                            {text.content}
-                         </div>
-                    ))}
-                 </div>
-            ) : (
-                !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
-            )}
-        </main>
-        
-        {/* Bottom Bar */}
+        {/* Thumbnails */}
         {boardData && (
-          <footer className="fixed bottom-0 left-0 w-full h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-t border-border z-20">
+          <div className="fixed top-12 left-0 w-full h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border z-20">
             {/* Thumbs */}
             <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
@@ -299,8 +259,49 @@ export default function BoardPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-          </footer>
+          </div>
         )}
+
+        {/* Toolbar */}
+        <div className="fixed top-[128px] left-0 w-full h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
+          <Button variant="ghost" size="icon" onClick={handleAddText}>
+            <CaseSensitive className="h-5 w-5" />
+            <span className="sr-only">Add Text</span>
+          </Button>
+        </div>
+        
+        {/* Canvas Stage */}
+        <main className="fixed top-[176px] left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 176px)'}}>
+            {error && <p className="text-destructive">{error}</p>}
+            
+            {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
+
+            {boardData && currentSlide ? (
+                 <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                    {currentSlide.texts.map((text) => (
+                         <div
+                            key={text.id}
+                            style={{
+                                position: 'absolute',
+                                left: `${text.position[0]}%`,
+                                top: `${text.position[1]}%`,
+                                transform: 'translate(-50%, -50%)',
+                                fontSize: `${text.font_size}px`,
+                                width: text.width ? `${text.width}px` : 'auto',
+                                color: 'black',
+                                padding: '4px',
+                                wordWrap: 'break-word',
+                            }}
+                         >
+                            {text.content}
+                         </div>
+                    ))}
+                 </div>
+            ) : (
+                !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
+            )}
+        </main>
+        
       </div>
       <AlertDialog open={showSaveErrorAlert} onOpenChange={setShowSaveErrorAlert}>
         <AlertDialogContent>
