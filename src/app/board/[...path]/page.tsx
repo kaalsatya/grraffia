@@ -385,62 +385,60 @@ export default function BoardPage() {
 
       {/* Main Content & Footer Wrapper */}
       <div className="flex-grow flex flex-col overflow-hidden">
-        <main className="flex-grow w-full flex justify-center items-center relative overflow-y-auto">
+        <main className="flex-grow w-full flex justify-center items-start relative overflow-y-auto">
             {error && <p className="text-destructive absolute top-4 left-4">{error}</p>}
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
             {boardData && currentSlide ? (
               <div className="w-full h-full flex flex-col">
-                <div className="flex-grow relative">
-                    <div className="w-full aspect-video bg-white absolute top-0 left-0">
-                        <div id="canvas-container" className="w-full h-full relative overflow-hidden">
-                            {currentSlide.texts.map((text) => (
-                              <div
-                                key={text.id}
-                                onDoubleClick={() => handleTextDoubleClick(text.id)}
-                                onClick={() => {
-                                  setSelectedTextId(text.id);
-                                  if (editingTextId && editingTextId !== text.id) {
-                                    setEditingTextId(null);
-                                  }
-                                }}
-                                style={{
-                                  position: 'absolute',
-                                  left: `${text.position[0]}%`,
-                                  top: `${text.position[1]}%`,
-                                  transform: `translate(-50%, -50%) rotate(${text.rotation}deg)`,
-                                  fontSize: `${text.font_size}px`,
-                                  width: `${text.width}px`,
-                                  color: 'black',
-                                  padding: '4px',
-                                  wordWrap: 'break-word',
-                                  cursor: 'pointer',
-                                  border: selectedTextId === text.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
-                                }}
-                              >
-                                 {editingTextId === text.id ? (
-                                    <Textarea
-                                        value={text.content}
-                                        onChange={(e) => handleTextChange(text.id, e.target.value)}
-                                        onBlur={handleTextBlur}
-                                        autoFocus
-                                        className="w-full h-full p-0 m-0 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                        style={{
-                                            fontSize: 'inherit',
-                                            fontFamily: 'inherit',
-                                            color: 'inherit',
-                                            lineHeight: 'inherit',
-                                            textAlign: 'inherit',
-                                            outline: 'none',
-                                        }}
-                                        onKeyDown={(e) => e.stopPropagation()} // Prevent controls from firing
-                                    />
-                                ) : (
-                                  text.content
-                                )}
-                              </div>
-                            ))}
-                        </div>
+                <div className="w-full aspect-video bg-white">
+                    <div id="canvas-container" className="w-full h-full relative overflow-hidden">
+                        {currentSlide.texts.map((text) => (
+                          <div
+                            key={text.id}
+                            onDoubleClick={() => handleTextDoubleClick(text.id)}
+                            onClick={() => {
+                              setSelectedTextId(text.id);
+                              if (editingTextId && editingTextId !== text.id) {
+                                setEditingTextId(null);
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              left: `${text.position[0]}%`,
+                              top: `${text.position[1]}%`,
+                              transform: `translate(-50%, -50%) rotate(${text.rotation}deg)`,
+                              fontSize: `${text.font_size}px`,
+                              width: `${text.width}px`,
+                              color: 'black',
+                              padding: '4px',
+                              wordWrap: 'break-word',
+                              cursor: 'pointer',
+                              border: selectedTextId === text.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
+                            }}
+                          >
+                             {editingTextId === text.id ? (
+                                <Textarea
+                                    value={text.content}
+                                    onChange={(e) => handleTextChange(text.id, e.target.value)}
+                                    onBlur={handleTextBlur}
+                                    autoFocus
+                                    className="w-full h-full p-0 m-0 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    style={{
+                                        fontSize: 'inherit',
+                                        fontFamily: 'inherit',
+                                        color: 'inherit',
+                                        lineHeight: 'inherit',
+                                        textAlign: 'inherit',
+                                        outline: 'none',
+                                    }}
+                                    onKeyDown={(e) => e.stopPropagation()} // Prevent controls from firing
+                                />
+                            ) : (
+                              text.content
+                            )}
+                          </div>
+                        ))}
                     </div>
                 </div>
               </div>
@@ -528,5 +526,3 @@ export default function BoardPage() {
     </div>
   );
 }
-
-    
