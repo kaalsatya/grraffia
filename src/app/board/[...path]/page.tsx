@@ -270,38 +270,40 @@ export default function BoardPage() {
           </Button>
         </div>
         
-        {/* Canvas Stage */}
-        <main className="flex-grow w-full flex items-center justify-center bg-transparent">
-            {error && <p className="text-destructive">{error}</p>}
-            
-            {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
+        {/* Canvas Stage Wrapper */}
+        <div className="flex-grow w-full flex flex-col bg-transparent">
+          <main className="w-full flex justify-center bg-transparent">
+              {error && <p className="text-destructive">{error}</p>}
+              
+              {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
-            {boardData && currentSlide ? (
-                 <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
-                    {currentSlide.texts.map((text) => (
-                         <div
-                            key={text.id}
-                            style={{
-                                position: 'absolute',
-                                left: `${text.position[0]}%`,
-                                top: `${text.position[1]}%`,
-                                transform: 'translate(-50%, -50%)',
-                                fontSize: `${text.font_size}px`,
-                                width: text.width ? `${text.width}px` : 'auto',
-                                color: 'black',
-                                padding: '4px',
-                                wordWrap: 'break-word',
-                            }}
-                         >
-                            {text.content}
-                         </div>
-                    ))}
-                 </div>
-            ) : (
-                !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
-            )}
-        </main>
-        
+              {boardData && currentSlide ? (
+                  <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                      {currentSlide.texts.map((text) => (
+                          <div
+                              key={text.id}
+                              style={{
+                                  position: 'absolute',
+                                  left: `${text.position[0]}%`,
+                                  top: `${text.position[1]}%`,
+                                  transform: 'translate(-50%, -50%)',
+                                  fontSize: `${text.font_size}px`,
+                                  width: text.width ? `${text.width}px` : 'auto',
+                                  color: 'black',
+                                  padding: '4px',
+                                  wordWrap: 'break-word',
+                              }}
+                          >
+                              {text.content}
+                          </div>
+                      ))}
+                  </div>
+              ) : (
+                  !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
+              )}
+          </main>
+          <div className="flex-grow bg-transparent" />
+        </div>
       </div>
       <AlertDialog open={showSaveErrorAlert} onOpenChange={setShowSaveErrorAlert}>
         <AlertDialogContent>
