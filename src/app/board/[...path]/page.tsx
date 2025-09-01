@@ -271,8 +271,8 @@ export default function BoardPage() {
         </div>
         
         {/* Canvas Stage Wrapper */}
-        <div className="flex-grow w-full flex flex-col bg-transparent">
-          <main className="w-full flex justify-center bg-transparent">
+        <div className="flex-grow w-full flex flex-col bg-transparent overflow-hidden">
+          <main className="flex-grow w-full flex justify-center items-center bg-transparent p-4">
               {error && <p className="text-destructive">{error}</p>}
               
               {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
@@ -302,7 +302,7 @@ export default function BoardPage() {
                   !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
               )}
           </main>
-          <footer className="flex-grow bg-transparent flex items-center justify-center p-2">
+          <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
             <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
                 {/* Left Block */}
                 <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
