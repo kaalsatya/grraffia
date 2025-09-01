@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ArrowUp, ArrowDown, ArrowRight, CornerUpLeft, CornerDownRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -302,7 +302,30 @@ export default function BoardPage() {
                   !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
               )}
           </main>
-          <div className="flex-grow bg-transparent" />
+          <footer className="flex-grow bg-transparent flex items-center justify-center p-2">
+            <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
+                {/* Left Block */}
+                <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
+                    <Button variant="outline" size="icon"><RotateCcw className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ArrowUp className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><RotateCw className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ArrowLeft className="h-5 w-5"/></Button>
+                    <div></div>
+                    <Button variant="outline" size="icon"><ArrowRight className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><CornerUpLeft className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ArrowDown className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><CornerDownRight className="h-5 w-5"/></Button>
+                </div>
+                {/* Right Block */}
+                <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
+                    <Button variant="outline" size="icon"><ZoomOut className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ZoomIn className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ChevronsLeft className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon"><ChevronsRight className="h-5 w-5"/></Button>
+                    <Button variant="destructive" className="col-span-2 w-full"><Trash2 className="h-5 w-5 mr-2"/> Delete</Button>
+                </div>
+            </div>
+          </footer>
         </div>
       </div>
       <AlertDialog open={showSaveErrorAlert} onOpenChange={setShowSaveErrorAlert}>
