@@ -299,9 +299,9 @@ export default function BoardPage() {
   const currentSlide = boardData?.slides[currentSlideIndex];
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background z-10">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-muted">
       {/* Header */}
-      <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
+      <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card border-b border-border">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
             <ArrowLeft className="h-4 w-4" />
@@ -325,7 +325,7 @@ export default function BoardPage() {
       
       {/* Thumbnails */}
       {boardData && (
-        <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border">
+        <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card border-b border-border">
             <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
                     <div key={index} className="flex-shrink-0 text-center">
@@ -376,17 +376,17 @@ export default function BoardPage() {
       )}
 
       {/* Toolbar */}
-      <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
+      <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card border-b border-border">
           <Button variant="ghost" size="icon" onClick={handleAddText}>
             <CaseSensitive className="h-5 w-5" />
             <span className="sr-only">Add Text</span>
           </Button>
       </div>
 
-      {/* Main Content & Footer */}
-      <div className="flex-grow flex flex-col bg-transparent overflow-hidden">
+      {/* Main Content & Footer Wrapper */}
+      <div className="flex-grow flex flex-col bg-muted overflow-hidden">
         {/* Canvas */}
-        <main className="flex-grow w-full flex justify-center items-center bg-transparent">
+        <main className="flex-grow w-full flex justify-center items-center relative">
             {error && <p className="text-destructive">{error}</p>}
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
@@ -445,15 +445,15 @@ export default function BoardPage() {
         </main>
 
         {/* Controls Footer */}
-        <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
-            <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
+        <footer className="flex-shrink-0 bg-card/80 backdrop-blur-sm flex items-center justify-center p-2 border-t">
+            <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card">
                 <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('up-left')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 2.29289C8.68342 1.90237 9.31658 1.90237 9.70711 2.29289L13.2071 5.79289C13.5976 6.18342 13.5976 6.81658 13.2071 7.20711C12.8166 7.59763 12.1834 7.59763 11.7929 7.20711L9 4.41421L6.20711 7.20711C5.81658 7.59763 5.18342 7.59763 4.79289 7.20711C4.40237 6.81658 4.40237 6.18342 4.79289 5.79289L8.29289 2.29289ZM8 12.5L8 3L10 3L10 12.5H8Z" transform="translate(-1.5 -1.5) scale(1.25)" fill="currentColor"></path></svg>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 2.29289C8.68342 1.90237 9.31658 1.90237 9.70711 2.29289L13.2071 5.79289C13.5976 6.18342 13.5976 6.81658 13.2071 7.20711C12.8166 7.59763 12.1834 7.59763 11.7929 7.20711L9 4.41421L6.20711 7.20711C5.81658 7.59763 5.18342 7.59763 4.79289 7.20711C4.40237 6.81658 4.40237 6.18342 4.79289 5.79289L8.29289 2.29289ZM8 12.5L8 3L10 3L10 12.5H8Z" transform="rotate(-45 6.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('up')} disabled={!selectedTextId}><ArrowUp className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('up-right')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 2.29289C5.68342 1.90237 6.31658 1.90237 6.70711 2.29289L10.2071 5.79289C10.5976 6.18342 10.5976 6.81658 10.2071 7.20711C9.81658 7.59763 9.18342 7.59763 8.79289 7.20711L6 4.41421L3.20711 7.20711C2.81658 7.59763 2.18342 7.59763 1.79289 7.20711C1.40237 6.81658 1.40237 6.18342 1.79289 5.79289L5.29289 2.29289ZM5 12.5L5 3H7L7 12.5H5Z" transform="translate(1.5 -1.5) scale(1.25)" fill="currentColor"></path></svg>
+                     <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 2.29289C5.68342 1.90237 6.31658 1.90237 6.70711 2.29289L10.2071 5.79289C10.5976 6.18342 10.5976 6.81658 10.2071 7.20711C9.81658 7.59763 9.18342 7.59763 8.79289 7.20711L6 4.41421L3.20711 7.20711C2.81658 7.59763 2.18342 7.59763 1.79289 7.20711C1.40237 6.81658 1.40237 6.18342 1.79289 5.79289L5.29289 2.29289ZM5 12.5L5 3H7L7 12.5H5Z" transform="rotate(45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('left')} disabled={!selectedTextId}><ArrowLeftIcon className="h-5 w-5"/></Button>
                     <div className="flex items-center justify-center gap-1">
@@ -462,11 +462,11 @@ export default function BoardPage() {
                     </div>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('right')} disabled={!selectedTextId}><ArrowRightIcon className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('down-left')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.2071 9.20711C13.5976 8.81658 13.5976 8.18342 13.2071 7.79289C12.8166 7.40237 12.1834 7.40237 11.7929 7.79289L9 10.5858L6.20711 7.79289C5.81658 7.40237 5.18342 7.40237 4.79289 7.79289C4.40237 8.18342 4.40237 8.81658 4.79289 9.20711L8.29289 12.7071ZM8 2.5L8 12L10 12L10 2.5H8Z" transform="translate(-1.5, 1.5) scale(1.25)" fill="currentColor"></path></svg>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.2071 9.20711C13.5976 8.81658 13.5976 8.18342 13.2071 7.79289C12.8166 7.40237 12.1834 7.40237 11.7929 7.79289L9 10.5858L6.20711 7.79289C5.81658 7.40237 5.18342 7.40237 4.79289 7.79289C4.40237 8.18342 4.40237 8.81658 4.79289 9.20711L8.29289 12.7071ZM8 2.5L8 12L10 12L10 2.5H8Z" transform="rotate(45 6.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('down')} disabled={!selectedTextId}><ArrowDown className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('down-right')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" transform="translate(1.5, 1.5) scale(1.25)" fill="currentColor"></path></svg>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" transform="rotate(-45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
@@ -504,7 +504,7 @@ export default function BoardPage() {
             <AlertDialogTitle>Save Failed</AlertDialogTitle>
             <AlertDialogDescription>
               Could not save your changes to the file. Please check your permissions and try again.
-            </AlertDialogDescription>
+            </Description>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
