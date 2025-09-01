@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
