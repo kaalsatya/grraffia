@@ -87,7 +87,6 @@ export default function BoardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
-  const [scanThreshold, setScanThreshold] = useState(50);
 
 
   const context = useContext(WorkspaceContext);
@@ -410,11 +409,6 @@ export default function BoardPage() {
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
-    const crop = centerCrop(
-      makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
-      width,
-      height
-    );
      // Set a default free crop
     setCrop({
         unit: '%',
@@ -423,7 +417,6 @@ export default function BoardPage() {
         x: 25,
         y: 25,
     });
-    setCompletedCrop(crop);
   };
 
   async function getProcessedImage(
@@ -788,32 +781,26 @@ export default function BoardPage() {
                       />
                   </ReactCrop>
                 </div>
-                <div className="flex md:flex-col justify-center gap-8">
-                    <div className="grid gap-2 text-center">
-                        <Label htmlFor="brightness-slider">Brightness</Label>
+                <div className="space-y-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="brightness-slider" className="text-center">Brightness: {brightness}%</Label>
                          <Slider 
                             id="brightness-slider"
-                            orientation="vertical"
                             value={[brightness]} 
                             onValueChange={(val) => setBrightness(val[0])}
                             max={200}
                             step={1}
-                            className="h-48 mx-auto"
                         />
-                        <span className="text-sm font-medium">{brightness}%</span>
                     </div>
-                    <div className="grid gap-2 text-center">
-                        <Label htmlFor="contrast-slider">Contrast</Label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="contrast-slider" className="text-center">Contrast: {contrast}%</Label>
                          <Slider 
                             id="contrast-slider"
-                            orientation="vertical"
                             value={[contrast]} 
                             onValueChange={(val) => setContrast(val[0])}
                             max={200}
                             step={1}
-                            className="h-48 mx-auto"
                         />
-                        <span className="text-sm font-medium">{contrast}%</span>
                     </div>
                 </div>
               </div>
