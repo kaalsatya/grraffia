@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useContext, useCallback } from 'react';
@@ -303,7 +304,7 @@ export default function BoardPage() {
             <AlertDialogTitle>Save Failed</AlertDialogTitle>
             <AlertDialogDescription>
               Could not save your changes to the file. Please check your permissions and try again.
-            </AlexDialogDescription>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -314,3 +315,5 @@ export default function BoardPage() {
     </>
   );
 }
+
+    
