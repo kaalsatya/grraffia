@@ -299,7 +299,7 @@ export default function BoardPage() {
   const currentSlide = boardData?.slides[currentSlideIndex];
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-black">
+    <div className="flex flex-col h-screen w-screen bg-black overflow-hidden">
       {/* Header */}
       <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card border-b border-border">
         <div className="flex items-center gap-2">
