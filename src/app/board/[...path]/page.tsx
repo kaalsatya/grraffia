@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ArrowUp, ArrowDown, ArrowRight, CornerUpLeft, CornerDownRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ArrowUp, ArrowDown, ArrowRight, CornerUpLeft, CornerDownRight, ChevronsLeft, ChevronsRight, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -53,6 +53,7 @@ export default function BoardPage() {
   const { toast } = useToast();
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
 
@@ -151,6 +152,7 @@ export default function BoardPage() {
   
   const handleThumbnailClick = (index: number) => {
     setCurrentSlideIndex(index);
+    setSelectedTextId(null);
   };
 
   const handleAddText = () => {
@@ -180,20 +182,19 @@ export default function BoardPage() {
   const currentSlide = boardData?.slides[currentSlideIndex];
 
   return (
-    <>
-      <BackgroundAnimation />
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent z-10">
-        <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
-              <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only">Back to Home</span>
-            </Button>
-            <h1 className="text-lg font-semibold truncate">
-              {getFileName()}
-            </h1>
-          </div>
-          <div className="flex items-center">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent z-10">
+      {/* Header */}
+      <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Back to Home</span>
+          </Button>
+          <h1 className="text-lg font-semibold truncate">
+            {getFileName()}
+          </h1>
+        </div>
+        <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => saveBoard(boardData)}>
               <Save className="h-5 w-5" />
               <span className="sr-only">Save Board</span>
@@ -202,11 +203,12 @@ export default function BoardPage() {
                 <Send className="h-5 w-5" />
                 <span className="sr-only">Send</span>
             </Button>
-          </div>
-        </header>
-
-        {boardData && (
-          <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border">
+        </div>
+      </header>
+      
+      {/* Thumbnails */}
+      {boardData && (
+        <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border">
             <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
                     <div key={index} className="flex-shrink-0 text-center">
@@ -227,13 +229,11 @@ export default function BoardPage() {
                     </div>
                 ))}
             </div>
-
             <div className="flex items-center gap-2 p-2 border-l border-border">
                 <Button variant="outline" size="icon" onClick={handleAddSlide} className="w-12 h-12 text-2xl">
                     <Plus className="h-6 w-6" />
                     <span className="sr-only">Add Slide</span>
                 </Button>
-                
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="icon" disabled={boardData.slides.length <= 1} className="w-12 h-12 text-2xl">
@@ -255,59 +255,74 @@ export default function BoardPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-          </div>
-        )}
+        </div>
+      )}
 
-        <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
+      {/* Toolbar */}
+      <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
           <Button variant="ghost" size="icon" onClick={handleAddText}>
             <CaseSensitive className="h-5 w-5" />
             <span className="sr-only">Add Text</span>
           </Button>
-        </div>
-        
-        <div className="flex-grow w-full flex flex-col bg-transparent overflow-hidden">
-          <main className="flex-grow w-full flex justify-center items-center bg-transparent">
-              {error && <p className="text-destructive">{error}</p>}
-              
-              {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
+      </div>
 
-              {boardData && currentSlide ? (
-                  <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
-                      {currentSlide.texts.map((text) => (
-                          <div
-                              key={text.id}
-                              style={{
-                                  position: 'absolute',
-                                  left: `${text.position[0]}%`,
-                                  top: `${text.position[1]}%`,
-                                  transform: 'translate(-50%, -50%)',
-                                  fontSize: `${text.font_size}px`,
-                                  width: text.width ? `${text.width}px` : 'auto',
-                                  color: 'black',
-                                  padding: '4px',
-                                  wordWrap: 'break-word',
-                              }}
-                          >
-                              {text.content}
-                          </div>
-                      ))}
-                  </div>
-              ) : (
-                  !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
-              )}
-          </main>
-          <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
+      {/* Main Content & Footer */}
+      <div className="flex-grow flex flex-col bg-transparent overflow-hidden">
+        {/* Canvas */}
+        <main className="flex-grow w-full flex justify-center items-center bg-transparent">
+            {error && <p className="text-destructive">{error}</p>}
+            {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
+
+            {boardData && currentSlide ? (
+                <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                    {currentSlide.texts.map((text) => (
+                        <div
+                            key={text.id}
+                            onClick={() => setSelectedTextId(text.id)}
+                            style={{
+                                position: 'absolute',
+                                left: `${text.position[0]}%`,
+                                top: `${text.position[1]}%`,
+                                transform: 'translate(-50%, -50%)',
+                                fontSize: `${text.font_size}px`,
+                                width: text.width ? `${text.width}px` : 'auto',
+                                color: 'black',
+                                padding: '4px',
+                                wordWrap: 'break-word',
+                                cursor: 'pointer',
+                                border: selectedTextId === text.id ? '2px dashed #007bff' : '2px dashed transparent',
+                            }}
+                        >
+                            {text.content}
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
+            )}
+        </main>
+
+        {/* Controls Footer */}
+        <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
             <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
                 <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
-                    <Button variant="outline" size="icon"><RotateCcw className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 19l-7-7 7-7"/><path d="M17 19l-7-7 7-7"/></svg>
+                    </Button>
                     <Button variant="outline" size="icon"><ArrowUp className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon"><RotateCw className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 5l7 7-7 7"/><path d="M7 5l7 7-7 7"/></svg>
+                    </Button>
                     <Button variant="outline" size="icon"><ArrowLeft className="h-5 w-5"/></Button>
-                    <div></div>
+                    <Button variant="outline" size="icon"><RotateCw className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon"><ArrowRight className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon"><CornerUpLeft className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 5l-7 7 7 7"/><path d="M17 5l-7 7 7 7"/></svg>
+                    </Button>
                     <Button variant="outline" size="icon"><ArrowDown className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon"><CornerDownRight className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 19l7-7-7-7"/><path d="M7 19l7-7-7-7"/></svg>
+                    </Button>
                 </div>
                 <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
                     <Button variant="outline" size="icon"><ZoomOut className="h-5 w-5"/></Button>
@@ -317,9 +332,9 @@ export default function BoardPage() {
                     <Button variant="destructive" className="col-span-2 w-full"><Trash2 className="h-5 w-5 mr-2"/> Delete</Button>
                 </div>
             </div>
-          </footer>
-        </div>
+        </footer>
       </div>
+
       <AlertDialog open={showSaveErrorAlert} onOpenChange={setShowSaveErrorAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -334,7 +349,7 @@ export default function BoardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 
     
