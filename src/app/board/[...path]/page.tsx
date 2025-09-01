@@ -149,13 +149,23 @@ export default function BoardPage() {
   const handleAddSlide = () => {
     if (!boardData) return;
     const newSlide: Slide = {
-        slide_number: boardData.slides.length + 1,
+        slide_number: 0, // temp value, will be renumbered
         texts: [],
         images: [],
     };
-    const updatedData = { ...boardData, slides: [...boardData.slides, newSlide] };
+    
+    const newSlides = [
+        ...boardData.slides.slice(0, currentSlideIndex + 1),
+        newSlide,
+        ...boardData.slides.slice(currentSlideIndex + 1),
+    ].map((slide, index) => ({
+        ...slide,
+        slide_number: index + 1,
+    }));
+
+    const updatedData = { ...boardData, slides: newSlides };
     setBoardData(updatedData);
-    setCurrentSlideIndex(updatedData.slides.length - 1);
+    setCurrentSlideIndex(currentSlideIndex + 1);
   };
   
   const handleDeleteSlide = () => {
