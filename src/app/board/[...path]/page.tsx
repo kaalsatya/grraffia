@@ -29,6 +29,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -80,6 +82,7 @@ export default function BoardPage() {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [sourceImage, setSourceImage] = useState<string | null>(null);
+  const [scanThreshold, setScanThreshold] = useState(50);
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -452,7 +455,7 @@ export default function BoardPage() {
     });
   }
 
-  async function processImageClientSide(dataUrl: string): Promise<string> {
+  async function processImageClientSide(dataUrl: string, thresholdPercent: number): Promise<string> {
     return new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => {
@@ -469,17 +472,17 @@ export default function BoardPage() {
             
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
-            const threshold = 255 * (1 - 0.3); // 30% black
+            const threshold = 255 * (1 - (thresholdPercent / 100));
 
             for (let i = 0; i < data.length; i += 4) {
                 // greyscale
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
                 
                 if (avg > threshold) {
-                    // if lighter than 30% black, make transparent
+                    // if lighter than threshold, make transparent
                     data[i + 3] = 0;
                 } else {
-                    // if 30% black or darker, make it pure black
+                    // if threshold or darker, make it pure black
                     data[i] = 0;
                     data[i + 1] = 0;
                     data[i + 2] = 0;
@@ -503,7 +506,7 @@ export default function BoardPage() {
     try {
         const { dataUrl: croppedDataUrl } = await getCroppedImg(imgRef.current, completedCrop);
         
-        const processedDataUri = await processImageClientSide(croppedDataUrl);
+        const processedDataUri = await processImageClientSide(croppedDataUrl, scanThreshold);
 
         const newFilename = `scanned-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
@@ -807,15 +810,28 @@ export default function BoardPage() {
                 <DialogDescription>Crop the image and click Scan to process it.</DialogDescription>
             </DialogHeader>
             {sourceImage && (
-              <div className="flex justify-center items-center">
-                <ReactCrop
-                    crop={crop}
-                    onChange={c => setCrop(c)}
-                    onComplete={c => setCompletedCrop(c)}
-                    aspect={16/9}
-                >
-                    <img ref={imgRef} src={sourceImage} onLoad={onImageLoad} alt="Crop preview" />
-                </ReactCrop>
+              <div className="grid gap-4 py-4">
+                <div className="flex justify-center items-center">
+                  <ReactCrop
+                      crop={crop}
+                      onChange={c => setCrop(c)}
+                      onComplete={c => setCompletedCrop(c)}
+                      aspect={16/9}
+                  >
+                      <img ref={imgRef} src={sourceImage} onLoad={onImageLoad} alt="Crop preview" />
+                  </ReactCrop>
+                </div>
+                <div className="grid w-full max-w-sm items-center gap-1.5">
+                  <Label htmlFor="threshold">Blackness Threshold (%)</Label>
+                  <Input 
+                    type="number" 
+                    id="threshold" 
+                    value={scanThreshold}
+                    onChange={(e) => setScanThreshold(parseInt(e.target.value, 10))}
+                    min="0"
+                    max="100"
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>
