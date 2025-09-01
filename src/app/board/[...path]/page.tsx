@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ArrowUp, ArrowDown, ArrowRight, CornerUpLeft, CornerDownRight, ChevronsLeft, ChevronsRight, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ArrowUp, ArrowDown, ArrowRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -178,6 +178,43 @@ export default function BoardPage() {
     
     setBoardData({ ...boardData, slides: updatedSlides });
   };
+
+  const handleMoveText = (direction: 'up' | 'down' | 'left' | 'right' | 'up-left' | 'up-right' | 'down-left' | 'down-right') => {
+    if (!selectedTextId || !boardData) return;
+
+    const step = 2; // Percentage step
+
+    const updatedSlides = boardData.slides.map((slide, index) => {
+        if (index === currentSlideIndex) {
+            return {
+                ...slide,
+                texts: slide.texts.map(text => {
+                    if (text.id === selectedTextId) {
+                        let newX = text.position[0];
+                        let newY = text.position[1];
+
+                        switch (direction) {
+                            case 'up': newY -= step; break;
+                            case 'down': newY += step; break;
+                            case 'left': newX -= step; break;
+                            case 'right': newX += step; break;
+                            case 'up-left': newY -= step; newX -= step; break;
+                            case 'up-right': newY -= step; newX += step; break;
+                            case 'down-left': newY += step; newX -= step; break;
+                            case 'down-right': newY += step; newX += step; break;
+                        }
+
+                        return { ...text, position: [newX, newY] as [number, number] };
+                    }
+                    return text;
+                })
+            };
+        }
+        return slide;
+    });
+
+    setBoardData({ ...boardData, slides: updatedSlides });
+  };
   
   const currentSlide = boardData?.slides[currentSlideIndex];
 
@@ -290,7 +327,7 @@ export default function BoardPage() {
                                 padding: '4px',
                                 wordWrap: 'break-word',
                                 cursor: 'pointer',
-                                border: selectedTextId === text.id ? '2px dashed #007bff' : '2px dashed transparent',
+                                border: selectedTextId === text.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
                             }}
                         >
                             {text.content}
@@ -306,22 +343,22 @@ export default function BoardPage() {
         <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
             <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
                 <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
-                    <Button variant="outline" size="icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 19l-7-7 7-7"/><path d="M17 19l-7-7 7-7"/></svg>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('up-left')}>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 2.29289C8.68342 1.90237 9.31658 1.90237 9.70711 2.29289L13.2071 5.79289C13.5976 6.18342 13.5976 6.81658 13.2071 7.20711C12.8166 7.59763 12.1834 7.59763 11.7929 7.20711L9 4.41421L6.20711 7.20711C5.81658 7.59763 5.18342 7.59763 4.79289 7.20711C4.40237 6.81658 4.40237 6.18342 4.79289 5.79289L8.29289 2.29289ZM8 12.5L8 3L10 3L10 12.5H8Z" fill="currentColor"></path></svg>
                     </Button>
-                    <Button variant="outline" size="icon"><ArrowUp className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 5l7 7-7 7"/><path d="M7 5l7 7-7 7"/></svg>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('up')}><ArrowUp className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('up-right')}>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 2.29289C5.68342 1.90237 6.31658 1.90237 6.70711 2.29289L10.2071 5.79289C10.5976 6.18342 10.5976 6.81658 10.2071 7.20711C9.81658 7.59763 9.18342 7.59763 8.79289 7.20711L6 4.41421L3.20711 7.20711C2.81658 7.59763 2.18342 7.59763 1.79289 7.20711C1.40237 6.81658 1.40237 6.18342 1.79289 5.79289L5.29289 2.29289ZM5 12.5L5 3H7L7 12.5H5Z" fill="currentColor"></path></svg>
                     </Button>
-                    <Button variant="outline" size="icon"><ArrowLeft className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('left')}><ArrowLeft className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon"><RotateCw className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon"><ArrowRight className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 5l-7 7 7 7"/><path d="M17 5l-7 7 7 7"/></svg>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('right')}><ArrowRight className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('down-left')}>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.2071 9.20711C13.5976 8.81658 13.5976 8.18342 13.2071 7.79289C12.8166 7.40237 12.1834 7.40237 11.7929 7.79289L9 10.5858L6.20711 7.79289C5.81658 7.40237 5.18342 7.40237 4.79289 7.79289C4.40237 8.18342 4.40237 8.81658 4.79289 9.20711L8.29289 12.7071ZM8 2.5L8 12L10 12L10 2.5H8Z" fill="currentColor"></path></svg>
                     </Button>
-                    <Button variant="outline" size="icon"><ArrowDown className="h-5 w-5"/></Button>
-                    <Button variant="outline" size="icon">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 19l7-7-7-7"/><path d="M7 19l7-7-7-7"/></svg>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('down')}><ArrowDown className="h-5 w-5"/></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleMoveText('down-right')}>
+                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" fill="currentColor"></path></svg>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
@@ -351,5 +388,4 @@ export default function BoardPage() {
       </AlertDialog>
     </div>
   );
-
-    
+ 
