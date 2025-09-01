@@ -386,7 +386,7 @@ export default function BoardPage() {
       {/* Main Content & Footer Wrapper */}
       <div className="flex-grow flex flex-col bg-muted overflow-hidden">
         {/* Canvas */}
-        <main className="flex-grow w-full flex justify-center items-center relative">
+        <main className="flex-grow w-full flex justify-center items-center relative p-4">
             {error && <p className="text-destructive">{error}</p>}
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
@@ -504,7 +504,7 @@ export default function BoardPage() {
             <AlertDialogTitle>Save Failed</AlertDialogTitle>
             <AlertDialogDescription>
               Could not save your changes to the file. Please check your permissions and try again.
-            </Description>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
