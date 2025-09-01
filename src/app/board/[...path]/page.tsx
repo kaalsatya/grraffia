@@ -87,6 +87,7 @@ export default function BoardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
+  const [scanThreshold, setScanThreshold] = useState(50);
 
 
   const context = useContext(WorkspaceContext);
@@ -770,8 +771,8 @@ export default function BoardPage() {
                 <DialogDescription>Crop and adjust the image before inserting it.</DialogDescription>
             </DialogHeader>
             {sourceImage && (
-              <div className="grid grid-cols-[1fr_auto] gap-8 py-4">
-                <div className="flex justify-center items-center">
+              <div className="grid md:grid-cols-[1fr_auto] gap-8 py-4">
+                <div className="flex justify-center items-center p-4 bg-muted/30 rounded-md">
                   <ReactCrop
                       crop={crop}
                       onChange={c => setCrop(c)}
@@ -783,10 +784,11 @@ export default function BoardPage() {
                         onLoad={onImageLoad} 
                         alt="Crop preview" 
                         style={{filter: `brightness(${brightness}%) contrast(${contrast}%)`}}
+                        className="max-h-[60vh] object-contain"
                       />
                   </ReactCrop>
                 </div>
-                <div className="grid gap-6">
+                <div className="flex md:flex-col justify-center gap-8">
                     <div className="grid gap-2 text-center">
                         <Label htmlFor="brightness-slider">Brightness</Label>
                          <Slider 
