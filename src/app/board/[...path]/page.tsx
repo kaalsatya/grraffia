@@ -469,17 +469,17 @@ export default function BoardPage() {
             
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
-            const threshold = 255 * (1 - 0.6); // 60% black
+            const threshold = 255 * (1 - 0.3); // 30% black
 
             for (let i = 0; i < data.length; i += 4) {
                 // greyscale
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
                 
                 if (avg > threshold) {
-                    // if lighter than 60% black, make transparent
+                    // if lighter than 30% black, make transparent
                     data[i + 3] = 0;
                 } else {
-                    // if 60% black or darker, make it pure black
+                    // if 30% black or darker, make it pure black
                     data[i] = 0;
                     data[i + 1] = 0;
                     data[i + 2] = 0;
