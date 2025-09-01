@@ -515,3 +515,5 @@ export default function BoardPage() {
     </div>
   );
 }
+
+    
