@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCcw, RotateCw, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -472,10 +472,7 @@ export default function BoardPage() {
                   <Button variant="outline" size="icon" onClick={() => handleMoveText('left')} disabled={!selectedTextId}>
                       <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 7.5L7 3.5V11.5L2 7.5Z" transform="scale(1.5)" fill="currentColor"></path></svg>
                   </Button>
-                  <div className="flex items-center justify-center gap-1">
-                    <Button variant="outline" size="icon" className="w-6 h-6" onClick={() => handleRotateText('ccw')} disabled={!selectedTextId}><RotateCcw className="h-4 w-4"/></Button>
-                    <Button variant="outline" size="icon" className="w-6 h-6" onClick={() => handleRotateText('cw')} disabled={!selectedTextId}><RotateCw className="h-4 w-4"/></Button>
-                  </div>
+                  <Button variant="outline" size="icon" onClick={() => handleRotateText('cw')} disabled={!selectedTextId}><RotateCw className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={() => handleMoveText('right')} disabled={!selectedTextId}>
                       <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 7.5L8 11.5V3.5L13 7.5Z" transform="scale(1.5)" fill="currentColor"></path></svg>
                   </Button>
