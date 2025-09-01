@@ -20,6 +20,7 @@ import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 
 interface TextItem {
@@ -54,6 +55,7 @@ export default function BoardPage() {
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
 
@@ -200,6 +202,20 @@ export default function BoardPage() {
     
     setBoardData({ ...boardData, slides: updatedSlides });
   };
+  
+  const handleTextDoubleClick = (textId: string) => {
+    setEditingTextId(textId);
+    setSelectedTextId(textId); // Also select it
+  };
+
+  const handleTextChange = (textId: string, newContent: string) => {
+    updateTextItem(textId, { content: newContent });
+  };
+  
+  const handleTextBlur = () => {
+    setEditingTextId(null);
+  };
+
 
   const handleMoveText = (direction: 'up' | 'down' | 'left' | 'right' | 'up-left' | 'up-right' | 'down-left' | 'down-right') => {
     if (!selectedTextId) return;
@@ -377,25 +393,50 @@ export default function BoardPage() {
             {boardData && currentSlide ? (
                 <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
                     {currentSlide.texts.map((text) => (
-                        <div
-                            key={text.id}
-                            onClick={() => setSelectedTextId(text.id)}
-                            style={{
-                                position: 'absolute',
-                                left: `${text.position[0]}%`,
-                                top: `${text.position[1]}%`,
-                                transform: `translate(-50%, -50%) rotate(${text.rotation}deg)`,
-                                fontSize: `${text.font_size}px`,
-                                width: `${text.width}px`,
-                                color: 'black',
-                                padding: '4px',
-                                wordWrap: 'break-word',
-                                cursor: 'pointer',
-                                border: selectedTextId === text.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
-                            }}
-                        >
-                            {text.content}
-                        </div>
+                      <div
+                        key={text.id}
+                        onDoubleClick={() => handleTextDoubleClick(text.id)}
+                        onClick={() => {
+                          setSelectedTextId(text.id);
+                          if (editingTextId && editingTextId !== text.id) {
+                            setEditingTextId(null);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          left: `${text.position[0]}%`,
+                          top: `${text.position[1]}%`,
+                          transform: `translate(-50%, -50%) rotate(${text.rotation}deg)`,
+                          fontSize: `${text.font_size}px`,
+                          width: `${text.width}px`,
+                          color: 'black',
+                          padding: '4px',
+                          wordWrap: 'break-word',
+                          cursor: 'pointer',
+                          border: selectedTextId === text.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
+                        }}
+                      >
+                         {editingTextId === text.id ? (
+                            <Textarea
+                                value={text.content}
+                                onChange={(e) => handleTextChange(text.id, e.target.value)}
+                                onBlur={handleTextBlur}
+                                autoFocus
+                                className="w-full h-full p-0 m-0 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                style={{
+                                    fontSize: 'inherit',
+                                    fontFamily: 'inherit',
+                                    color: 'inherit',
+                                    lineHeight: 'inherit',
+                                    textAlign: 'inherit',
+                                    outline: 'none',
+                                }}
+                                onKeyDown={(e) => e.stopPropagation()} // Prevent controls from firing
+                            />
+                        ) : (
+                          text.content
+                        )}
+                      </div>
                     ))}
                 </div>
             ) : (
@@ -473,5 +514,7 @@ export default function BoardPage() {
       </AlertDialog>
     </div>
   );
+}
+    
 
     
