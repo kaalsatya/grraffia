@@ -386,11 +386,12 @@ export default function BoardPage() {
       {/* Main Content & Footer Wrapper */}
       <div className="flex-grow flex flex-col bg-muted overflow-hidden">
         {/* Canvas */}
-        <main className="flex-grow w-full flex justify-center items-center relative">
-            {error && <p className="text-destructive">{error}</p>}
+        <main className="flex-grow w-full flex justify-center items-start relative overflow-y-auto">
+            {error && <p className="text-destructive absolute top-4 left-4">{error}</p>}
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
             {boardData && currentSlide ? (
+              <div className="w-full aspect-video">
                 <div id="canvas-container" className="w-full h-full bg-white relative overflow-hidden">
                     {currentSlide.texts.map((text) => (
                       <div
@@ -439,6 +440,7 @@ export default function BoardPage() {
                       </div>
                     ))}
                 </div>
+              </div>
             ) : (
                 !error && boardData && <p className="text-muted-foreground">This board is empty. Add a new slide to begin.</p>
             )}
