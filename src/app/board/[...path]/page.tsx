@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send } from 'lucide-react';
 import { BackgroundAnimation } from '@/components/BackgroundAnimation';
 import {
   AlertDialog,
@@ -197,6 +197,10 @@ export default function BoardPage() {
             <Button variant="ghost" size="icon" onClick={() => saveBoard(boardData)}>
               <Save className="h-5 w-5" />
               <span className="sr-only">Save Board</span>
+            </Button>
+            <Button variant="ghost" size="icon">
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Send</span>
             </Button>
           </div>
         </header>
