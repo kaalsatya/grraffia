@@ -272,7 +272,7 @@ export default function BoardPage() {
         
         {/* Canvas Stage Wrapper */}
         <div className="flex-grow w-full flex flex-col bg-transparent overflow-hidden">
-          <main className="flex-grow w-full flex justify-center items-center bg-transparent p-4">
+          <main className="flex-grow w-full flex justify-center items-center bg-transparent">
               {error && <p className="text-destructive">{error}</p>}
               
               {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
