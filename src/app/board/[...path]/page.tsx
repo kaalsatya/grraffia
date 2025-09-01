@@ -466,7 +466,7 @@ export default function BoardPage() {
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('down')} disabled={!selectedTextId}><ArrowDown className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => handleMoveText('down-right')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" transform="rotate(-45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
+                      <svg width="20" height="20" viewBox="0.0 0.0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" transform="rotate(-45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
                     </Button>
                 </div>
                 <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
@@ -515,6 +515,5 @@ export default function BoardPage() {
     </div>
   );
 }
-    
 
     
