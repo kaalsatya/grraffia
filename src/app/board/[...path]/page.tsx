@@ -386,12 +386,12 @@ export default function BoardPage() {
       {/* Main Content & Footer Wrapper */}
       <div className="flex-grow flex flex-col bg-muted overflow-hidden">
         {/* Canvas */}
-        <main className="flex-grow w-full flex justify-center items-center relative p-4">
+        <main className="flex-grow w-full flex justify-center items-center relative">
             {error && <p className="text-destructive">{error}</p>}
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
 
             {boardData && currentSlide ? (
-                <div id="canvas-container" className="w-full max-w-6xl aspect-video bg-white rounded-lg shadow-lg relative overflow-hidden border">
+                <div id="canvas-container" className="w-full h-full bg-white relative overflow-hidden">
                     {currentSlide.texts.map((text) => (
                       <div
                         key={text.id}
