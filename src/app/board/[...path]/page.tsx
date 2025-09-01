@@ -384,7 +384,7 @@ export default function BoardPage() {
       </div>
 
       {/* Main Content & Footer Wrapper */}
-      <div className="flex-grow flex flex-col bg-muted overflow-hidden">
+      <div className="flex-grow flex flex-col overflow-hidden">
         {/* Canvas */}
         <main className="flex-grow w-full flex justify-center items-start relative overflow-y-auto">
             {error && <p className="text-destructive absolute top-4 left-4">{error}</p>}
