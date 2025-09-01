@@ -33,6 +33,7 @@ import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-cr
 import 'react-image-crop/dist/ReactCrop.css';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 
 interface BaseItem {
@@ -409,11 +410,18 @@ export default function BoardPage() {
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
     const crop = centerCrop(
-      makeAspectCrop({ unit: '%', width: 90 }, 16 / 9, width, height),
+      makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
       width,
       height
     );
-    setCrop(crop);
+     // Set a default free crop
+    setCrop({
+        unit: '%',
+        width: 50,
+        height: 50,
+        x: 25,
+        y: 25,
+    });
     setCompletedCrop(crop);
   };
 
@@ -762,13 +770,12 @@ export default function BoardPage() {
                 <DialogDescription>Crop and adjust the image before inserting it.</DialogDescription>
             </DialogHeader>
             {sourceImage && (
-              <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-[1fr_auto] gap-8 py-4">
                 <div className="flex justify-center items-center">
                   <ReactCrop
                       crop={crop}
                       onChange={c => setCrop(c)}
                       onComplete={c => setCompletedCrop(c)}
-                      aspect={16/9}
                   >
                       <img 
                         ref={imgRef} 
@@ -779,26 +786,32 @@ export default function BoardPage() {
                       />
                   </ReactCrop>
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-4">
-                    <div className="grid gap-2">
+                <div className="grid gap-6">
+                    <div className="grid gap-2 text-center">
                         <Label htmlFor="brightness-slider">Brightness</Label>
-                        <Slider 
+                         <Slider 
                             id="brightness-slider"
+                            orientation="vertical"
                             value={[brightness]} 
                             onValueChange={(val) => setBrightness(val[0])}
                             max={200}
                             step={1}
+                            className="h-48 mx-auto"
                         />
+                        <span className="text-sm font-medium">{brightness}%</span>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 text-center">
                         <Label htmlFor="contrast-slider">Contrast</Label>
                          <Slider 
                             id="contrast-slider"
+                            orientation="vertical"
                             value={[contrast]} 
                             onValueChange={(val) => setContrast(val[0])}
                             max={200}
                             step={1}
+                            className="h-48 mx-auto"
                         />
+                        <span className="text-sm font-medium">{contrast}%</span>
                     </div>
                 </div>
               </div>
