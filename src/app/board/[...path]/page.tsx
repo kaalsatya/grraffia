@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowLeft as ArrowLeftIcon, ArrowRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +31,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { processImage } from '@/ai/flows/process-image-flow';
 
 
 interface BaseItem {
@@ -414,47 +413,89 @@ export default function BoardPage() {
 
   async function getCroppedImg(
     image: HTMLImageElement,
-    crop: Crop,
-    fileName: string
+    crop: Crop
   ): Promise<{ dataUrl: string, blob: Blob }> {
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    canvas.width = Math.floor(crop.width * scaleX);
-    canvas.height = Math.floor(crop.height * scaleY);
+    const cropWidth = Math.floor(crop.width * scaleX);
+    const cropHeight = Math.floor(crop.height * scaleY);
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
       throw new Error("Could not get canvas context");
     }
 
-    const pixelRatio = window.devicePixelRatio;
-    canvas.width = Math.floor(crop.width * scaleX * pixelRatio);
-    canvas.height = Math.floor(crop.height * scaleY * pixelRatio);
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.imageSmoothingQuality = 'high';
-
     ctx.drawImage(
       image,
       crop.x * scaleX,
       crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      cropWidth,
+      cropHeight,
       0,
       0,
-      crop.width * scaleX,
-      crop.height * scaleY
+      cropWidth,
+      cropHeight
     );
-
+    
     return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Canvas is empty'));
-          return;
-        }
-        const dataUrl = canvas.toDataURL('image/png');
-        resolve({ dataUrl, blob });
-      }, 'image/png', 1);
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error('Canvas is empty'));
+                return;
+            }
+            const dataUrl = canvas.toDataURL('image/png');
+            resolve({ dataUrl, blob });
+        }, 'image/png');
+    });
+  }
+
+  async function processImageClientSide(dataUrl: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                reject(new Error("Could not get canvas context"));
+                return;
+            }
+
+            ctx.drawImage(image, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const threshold = 240; // a value to determine what is "white"
+            const contrast = 1.5; // Simple contrast factor
+
+            for (let i = 0; i < data.length; i += 4) {
+                // greyscale
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                
+                // contrast
+                const contrasted = 128 + (avg - 128) * contrast;
+                const finalColor = Math.max(0, Math.min(255, contrasted));
+
+                data[i] = finalColor;
+                data[i + 1] = finalColor;
+                data[i + 2] = finalColor;
+
+                // remove white background
+                if (data[i] > threshold && data[i + 1] > threshold && data[i + 2] > threshold) {
+                    data[i + 3] = 0; // make transparent
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        image.onerror = (err) => {
+            reject(new Error("Image failed to load for processing"));
+        };
+        image.src = dataUrl;
     });
   }
 
@@ -463,9 +504,9 @@ export default function BoardPage() {
     
     setIsScanning(true);
     try {
-        const { dataUrl: croppedDataUrl, blob: croppedBlob } = await getCroppedImg(imgRef.current, completedCrop, 'cropped-image.png');
+        const { dataUrl: croppedDataUrl } = await getCroppedImg(imgRef.current, completedCrop);
         
-        const { photoDataUri: processedDataUri } = await processImage({ photoDataUri: croppedDataUrl });
+        const processedDataUri = await processImageClientSide(croppedDataUrl);
 
         const newFilename = `scanned-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
@@ -704,13 +745,13 @@ export default function BoardPage() {
           <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card">
               <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
                   <Button variant="outline" size="icon" onClick={() => handleMoveItem('up-left')} disabled={!selectedItemId}><ArrowUpLeft className="h-5 w-5"/></Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('up')} disabled={!selectedItemId}><svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 2C7.77614 2 8 2.22386 8 2.5L8 12.5C8 12.7761 7.77614 13 7.5 13C7.22386 13 7 12.7761 7 12.5L7 2.5C7 2.22386 7.22386 2 7.5 2Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path><path d="M4.14645 5.14645C4.34171 4.95118 4.65829 4.95118 4.85355 5.14645L7.5 7.79289L10.1464 5.14645C10.3417 4.95118 10.6583 4.95118 10.8536 5.14645C11.0488 5.34171 11.0488 5.65829 10.8536 5.85355L7.85355 8.85355C7.65829 9.04882 7.34171 9.04882 7.14645 8.85355L4.14645 5.85355C3.95118 5.65829 3.95118 5.34171 4.14645 5.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" transform="rotate(-180, 7.5, 7)"></path></svg></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('up')} disabled={!selectedItemId}><ArrowUp className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={() => handleMoveItem('up-right')} disabled={!selectedItemId}><ArrowUpRight className="h-5 w-5"/></Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('left')} disabled={!selectedItemId}><svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 7.5C2 7.22386 2.22386 7 2.5 7H12.5C12.7761 7 13 7.22386 13 7.5C13 7.77614 12.7761 8 12.5 8H2.5C2.22386 8 2 7.77614 2 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path><path d="M5.14645 4.14645C4.95118 4.34171 4.95118 4.65829 5.14645 4.85355L7.79289 7.5L5.14645 10.1464C4.95118 10.3417 4.95118 10.6583 5.14645 10.8536C5.34171 11.0488 5.65829 11.0488 5.85355 10.8536L8.85355 7.85355C9.04882 7.65829 9.04882 7.34171 8.85355 7.14645L5.85355 4.14645C5.65829 3.95118 5.34171 3.95118 5.14645 4.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('left')} disabled={!selectedItemId}><ArrowLeft className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={handleRotateItem} disabled={!selectedItemId}><RotateCw className="h-5 w-5"/></Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('right')} disabled={!selectedItemId}><svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 7.5C13 7.77614 12.7761 8 12.5 8L2.5 8C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7L12.5 7C12.7761 7 13 7.22386 13 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path><path d="M9.85355 10.8536C10.0488 10.6583 10.0488 10.3417 9.85355 10.1464L7.20711 7.5L9.85355 4.85355C10.0488 4.65829 10.0488 4.34171 9.85355 4.14645C9.65829 3.95118 9.34171 3.95118 9.14645 4.14645L6.14645 7.14645C5.95118 7.34171 5.95118 7.65829 6.14645 7.85355L9.14645 10.8536C9.34171 11.0488 9.65829 11.0488 9.85355 10.8536Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('right')} disabled={!selectedItemId}><ArrowRight className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={() => handleMoveItem('down-left')} disabled={!selectedItemId}><ArrowDownLeft className="h-5 w-5"/></Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('down')} disabled={!selectedItemId}><svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 13C7.22386 13 7 12.7761 7 12.5L7 2.5C7 2.22386 7.22386 2 7.5 2C7.77614 2 8 2.22386 8 2.5L8 12.5C8 12.7761 7.77614 13 7.5 13Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path><path d="M10.8536 9.85355C10.6583 10.0488 10.3417 10.0488 10.1464 9.85355L7.5 7.20711L4.85355 9.85355C4.65829 10.0488 4.34171 10.0488 4.14645 9.85355C3.95118 9.65829 3.95118 9.34171 4.14645 9.14645L7.14645 6.14645C7.34171 5.95118 7.65829 5.95118 7.85355 6.14645L10.8536 9.14645C11.0488 9.34171 11.0488 9.65829 10.8536 9.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveItem('down')} disabled={!selectedItemId}><ArrowDown className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={() => handleMoveItem('down-right')} disabled={!selectedItemId}><ArrowDownRight className="h-5 w-5"/></Button>
               </div>
               <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
@@ -756,7 +797,7 @@ export default function BoardPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isCropping} onOpenChange={setIsCropping}>
+      <Dialog open={isCropping} onOpenChange={(open) => { if (!open) { setIsCropping(false); setSourceImage(null); } else { setIsCropping(open); } }}>
         <DialogContent className="max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Scan Document</DialogTitle>
