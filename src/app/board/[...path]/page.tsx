@@ -31,7 +31,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { scanDocument } from '@/ai/flows/scan-document-flow';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 
 
 interface BaseItem {
@@ -77,12 +78,14 @@ export default function BoardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isInserting, setIsInserting] = useState(false);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
 
 
   const context = useContext(WorkspaceContext);
@@ -398,6 +401,8 @@ export default function BoardPage() {
       reader.addEventListener('load', () => setSourceImage(reader.result?.toString() || null));
       reader.readAsDataURL(e.target.files[0]);
       setIsCropping(true);
+      setBrightness(100);
+      setContrast(100);
     }
   };
 
@@ -412,9 +417,11 @@ export default function BoardPage() {
     setCompletedCrop(crop);
   };
 
-  async function getCroppedImg(
+  async function getProcessedImage(
     image: HTMLImageElement,
-    crop: Crop
+    crop: Crop,
+    brightness: number,
+    contrast: number
   ): Promise<{ dataUrl: string, blob: Blob }> {
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
@@ -429,6 +436,8 @@ export default function BoardPage() {
       throw new Error("Could not get canvas context");
     }
 
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+    
     ctx.drawImage(
       image,
       crop.x * scaleX,
@@ -453,33 +462,22 @@ export default function BoardPage() {
     });
   }
 
-  const handleScanDocument = async () => {
+  const handleInsertImage = async () => {
     if (!completedCrop || !imgRef.current) return;
     
-    setIsScanning(true);
+    setIsInserting(true);
     try {
-        const { dataUrl: croppedDataUrl } = await getCroppedImg(imgRef.current, completedCrop);
+        const { blob, dataUrl } = await getProcessedImage(imgRef.current, completedCrop, brightness, contrast);
         
-        const { scannedImageUri } = await scanDocument({ photoDataUri: croppedDataUrl });
-
-        const newFilename = `scanned-${Date.now()}.png`;
+        const newFilename = `edited-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
         const fullPath = fileDirectory ? `${fileDirectory}/${newFilename}` : newFilename;
-
-        const base64Data = scannedImageUri.split(',')[1];
-        const binaryData = atob(base64Data);
-        const arrayBuffer = new ArrayBuffer(binaryData.length);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < binaryData.length; i++) {
-            uint8Array[i] = binaryData.charCodeAt(i);
-        }
-        const finalBlob = new Blob([uint8Array], { type: 'image/png' });
         
-        await writeFile(fullPath, finalBlob as any);
+        await writeFile(fullPath, blob as any);
 
         const defaultWidth = 300;
         const img = new Image();
-        img.src = scannedImageUri;
+        img.src = dataUrl;
         await new Promise(resolve => img.onload = resolve);
         const aspectRatio = img.width / img.height;
         
@@ -492,7 +490,7 @@ export default function BoardPage() {
             scale: 1,
             width: defaultWidth,
             height: defaultWidth / aspectRatio,
-            src: URL.createObjectURL(finalBlob)
+            src: URL.createObjectURL(blob)
         };
 
         if (boardData) {
@@ -507,9 +505,9 @@ export default function BoardPage() {
         
     } catch (e) {
         console.error(e);
-        toast({ title: "Scanning failed", description: "Could not process the image.", variant: "destructive" });
+        toast({ title: "Image processing failed", description: "Could not process the image.", variant: "destructive" });
     } finally {
-        setIsScanning(false);
+        setIsInserting(false);
         setIsCropping(false);
         setSourceImage(null);
         if (fileInputRef.current) {
@@ -760,8 +758,8 @@ export default function BoardPage() {
       <Dialog open={isCropping} onOpenChange={(open) => { if (!open) { setIsCropping(false); setSourceImage(null); } else { setIsCropping(open); } }}>
         <DialogContent className="max-w-4xl">
             <DialogHeader>
-                <DialogTitle>Scan Document</DialogTitle>
-                <DialogDescription>Crop the image and click Scan to process it.</DialogDescription>
+                <DialogTitle>Edit Image</DialogTitle>
+                <DialogDescription>Crop and adjust the image before inserting it.</DialogDescription>
             </DialogHeader>
             {sourceImage && (
               <div className="grid gap-4 py-4">
@@ -772,8 +770,36 @@ export default function BoardPage() {
                       onComplete={c => setCompletedCrop(c)}
                       aspect={16/9}
                   >
-                      <img ref={imgRef} src={sourceImage} onLoad={onImageLoad} alt="Crop preview" />
+                      <img 
+                        ref={imgRef} 
+                        src={sourceImage} 
+                        onLoad={onImageLoad} 
+                        alt="Crop preview" 
+                        style={{filter: `brightness(${brightness}%) contrast(${contrast}%)`}}
+                      />
                   </ReactCrop>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="brightness-slider">Brightness</Label>
+                        <Slider 
+                            id="brightness-slider"
+                            value={[brightness]} 
+                            onValueChange={(val) => setBrightness(val[0])}
+                            max={200}
+                            step={1}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="contrast-slider">Contrast</Label>
+                         <Slider 
+                            id="contrast-slider"
+                            value={[contrast]} 
+                            onValueChange={(val) => setContrast(val[0])}
+                            max={200}
+                            step={1}
+                        />
+                    </div>
                 </div>
               </div>
             )}
@@ -782,9 +808,9 @@ export default function BoardPage() {
                     setIsCropping(false);
                     setSourceImage(null);
                 }}>Cancel</Button>
-                <Button onClick={handleScanDocument} disabled={isScanning}>
-                    {isScanning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isScanning ? "Scanning..." : "Scan Document"}
+                <Button onClick={handleInsertImage} disabled={isInserting}>
+                    {isInserting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isInserting ? "Inserting..." : "Insert Image"}
                 </Button>
             </DialogFooter>
         </DialogContent>
