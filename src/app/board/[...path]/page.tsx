@@ -469,24 +469,21 @@ export default function BoardPage() {
             
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
-            const threshold = 240; // a value to determine what is "white"
-            const contrast = 1.5; // Simple contrast factor
+            const threshold = 255 * (1 - 0.6); // 60% black
 
             for (let i = 0; i < data.length; i += 4) {
                 // greyscale
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
                 
-                // contrast
-                const contrasted = 128 + (avg - 128) * contrast;
-                const finalColor = Math.max(0, Math.min(255, contrasted));
-
-                data[i] = finalColor;
-                data[i + 1] = finalColor;
-                data[i + 2] = finalColor;
-
-                // remove white background
-                if (data[i] > threshold && data[i + 1] > threshold && data[i + 2] > threshold) {
-                    data[i + 3] = 0; // make transparent
+                if (avg > threshold) {
+                    // if lighter than 60% black, make transparent
+                    data[i + 3] = 0;
+                } else {
+                    // if 60% black or darker, make it pure black
+                    data[i] = 0;
+                    data[i + 1] = 0;
+                    data[i + 2] = 0;
+                    data[i + 3] = 255;
                 }
             }
             ctx.putImageData(imageData, 0, 0);
@@ -524,7 +521,10 @@ export default function BoardPage() {
         await writeFile(fullPath, finalBlob as any);
 
         const defaultWidth = 300;
-        const aspectRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
+        const img = new Image();
+        img.src = processedDataUri;
+        await new Promise(resolve => img.onload = resolve);
+        const aspectRatio = img.width / img.height;
         
         const newImageItem: ImageItem = {
             id: `img-${Date.now()}`,
