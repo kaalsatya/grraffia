@@ -29,10 +29,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { scanDocument } from '@/ai/flows/scan-document-flow';
 
 
 interface BaseItem {
@@ -82,7 +81,6 @@ export default function BoardPage() {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [sourceImage, setSourceImage] = useState<string | null>(null);
-  const [scanThreshold, setScanThreshold] = useState(50);
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -455,50 +453,6 @@ export default function BoardPage() {
     });
   }
 
-  async function processImageClientSide(dataUrl: string, thresholdPercent: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = image.width;
-            canvas.height = image.height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                reject(new Error("Could not get canvas context"));
-                return;
-            }
-
-            ctx.drawImage(image, 0, 0);
-            
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            const threshold = 255 * (1 - (thresholdPercent / 100));
-
-            for (let i = 0; i < data.length; i += 4) {
-                // greyscale
-                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                
-                if (avg > threshold) {
-                    // if lighter than threshold, make transparent
-                    data[i + 3] = 0;
-                } else {
-                    // if threshold or darker, make it pure black
-                    data[i] = 0;
-                    data[i + 1] = 0;
-                    data[i + 2] = 0;
-                    data[i + 3] = 255;
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
-        };
-        image.onerror = (err) => {
-            reject(new Error("Image failed to load for processing"));
-        };
-        image.src = dataUrl;
-    });
-  }
-
   const handleScanDocument = async () => {
     if (!completedCrop || !imgRef.current) return;
     
@@ -506,13 +460,13 @@ export default function BoardPage() {
     try {
         const { dataUrl: croppedDataUrl } = await getCroppedImg(imgRef.current, completedCrop);
         
-        const processedDataUri = await processImageClientSide(croppedDataUrl, scanThreshold);
+        const { scannedImageUri } = await scanDocument({ photoDataUri: croppedDataUrl });
 
         const newFilename = `scanned-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
         const fullPath = fileDirectory ? `${fileDirectory}/${newFilename}` : newFilename;
 
-        const base64Data = processedDataUri.split(',')[1];
+        const base64Data = scannedImageUri.split(',')[1];
         const binaryData = atob(base64Data);
         const arrayBuffer = new ArrayBuffer(binaryData.length);
         const uint8Array = new Uint8Array(arrayBuffer);
@@ -525,7 +479,7 @@ export default function BoardPage() {
 
         const defaultWidth = 300;
         const img = new Image();
-        img.src = processedDataUri;
+        img.src = scannedImageUri;
         await new Promise(resolve => img.onload = resolve);
         const aspectRatio = img.width / img.height;
         
@@ -820,17 +774,6 @@ export default function BoardPage() {
                   >
                       <img ref={imgRef} src={sourceImage} onLoad={onImageLoad} alt="Crop preview" />
                   </ReactCrop>
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5">
-                  <Label htmlFor="threshold">Blackness Threshold (%)</Label>
-                  <Input 
-                    type="number" 
-                    id="threshold" 
-                    value={scanThreshold}
-                    onChange={(e) => setScanThreshold(parseInt(e.target.value, 10))}
-                    min="0"
-                    max="100"
-                  />
                 </div>
               </div>
             )}
