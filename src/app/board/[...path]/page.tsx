@@ -123,7 +123,7 @@ export default function BoardPage() {
             ...slide,
             items: slide.items.map(item => {
                 if(item.type === 'image') {
-                    const { src, ...rest } = item;
+                    const { src, ...rest } = item as ImageItem;
                     return rest;
                 }
                 return item;
@@ -523,15 +523,18 @@ export default function BoardPage() {
         
         await writeFile(fullPath, finalBlob as any);
 
+        const defaultWidth = 300;
+        const aspectRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
+        
         const newImageItem: ImageItem = {
             id: `img-${Date.now()}`,
             type: 'image',
             filename: newFilename,
             position: [50, 50],
             rotation: 0,
-            scale: 0.5,
-            width: imgRef.current.naturalWidth,
-            height: imgRef.current.naturalHeight,
+            scale: 1,
+            width: defaultWidth,
+            height: defaultWidth / aspectRatio,
             src: URL.createObjectURL(finalBlob)
         };
 
