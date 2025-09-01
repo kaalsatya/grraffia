@@ -183,7 +183,6 @@ export default function BoardPage() {
     <>
       <BackgroundAnimation />
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent z-10">
-        {/* Header */}
         <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
@@ -206,10 +205,8 @@ export default function BoardPage() {
           </div>
         </header>
 
-        {/* Thumbnails */}
         {boardData && (
           <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border">
-            {/* Thumbs */}
             <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
                     <div key={index} className="flex-shrink-0 text-center">
@@ -231,7 +228,6 @@ export default function BoardPage() {
                 ))}
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-2 p-2 border-l border-border">
                 <Button variant="outline" size="icon" onClick={handleAddSlide} className="w-12 h-12 text-2xl">
                     <Plus className="h-6 w-6" />
@@ -262,7 +258,6 @@ export default function BoardPage() {
           </div>
         )}
 
-        {/* Toolbar */}
         <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
           <Button variant="ghost" size="icon" onClick={handleAddText}>
             <CaseSensitive className="h-5 w-5" />
@@ -270,7 +265,6 @@ export default function BoardPage() {
           </Button>
         </div>
         
-        {/* Canvas Stage Wrapper */}
         <div className="flex-grow w-full flex flex-col bg-transparent overflow-hidden">
           <main className="flex-grow w-full flex justify-center items-center bg-transparent">
               {error && <p className="text-destructive">{error}</p>}
@@ -304,7 +298,6 @@ export default function BoardPage() {
           </main>
           <footer className="flex-shrink-0 bg-transparent flex items-center justify-center p-2">
             <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card/80 backdrop-blur-sm">
-                {/* Left Block */}
                 <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
                     <Button variant="outline" size="icon"><RotateCcw className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon"><ArrowUp className="h-5 w-5"/></Button>
@@ -316,7 +309,6 @@ export default function BoardPage() {
                     <Button variant="outline" size="icon"><ArrowDown className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon"><CornerDownRight className="h-5 w-5"/></Button>
                 </div>
-                {/* Right Block */}
                 <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
                     <Button variant="outline" size="icon"><ZoomOut className="h-5 w-5"/></Button>
                     <Button variant="outline" size="icon"><ZoomIn className="h-5 w-5"/></Button>
@@ -344,4 +336,5 @@ export default function BoardPage() {
       </AlertDialog>
     </>
   );
-}
+
+    
