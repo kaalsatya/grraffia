@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft as ArrowLeftIcon, ArrowRight, ArrowDownLeft, ArrowDown, ArrowDownRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -460,31 +460,15 @@ export default function BoardPage() {
       <footer className="fixed bottom-0 left-0 right-0 z-10 bg-card/80 backdrop-blur-sm flex items-center justify-center p-2 border-t">
           <div className="flex gap-5 p-2.5 rounded-lg border-2 border-primary bg-card">
               <div className="grid grid-cols-3 grid-rows-3 gap-2.5">
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up-left')} disabled={!selectedTextId}>
-                    <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 2.29289C8.68342 1.90237 9.31658 1.90237 9.70711 2.29289L13.2071 5.79289C13.5976 6.18342 13.5976 6.81658 13.2071 7.20711C12.8166 7.59763 12.1834 7.59763 11.7929 7.20711L9 4.41421L6.20711 7.20711C5.81658 7.59763 5.18342 7.59763 4.79289 7.20711C4.40237 6.81658 4.40237 6.18342 4.79289 5.79289L8.29289 2.29289ZM8 12.5L8 3L10 3L10 12.5H8Z" transform="rotate(-45 6.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up')} disabled={!selectedTextId}>
-                        <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 2L11.5 7H3.5L7.5 2Z" transform="scale(1.5)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up-right')} disabled={!selectedTextId}>
-                    <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 2.29289C5.68342 1.90237 6.31658 1.90237 6.70711 2.29289L10.2071 5.79289C10.5976 6.18342 10.5976 6.81658 10.2071 7.20711C9.81658 7.59763 9.18342 7.59763 8.79289 7.20711L6 4.41421L3.20711 7.20711C2.81658 7.59763 2.18342 7.59763 1.79289 7.20711C1.40237 6.81658 1.40237 6.18342 1.79289 5.79289L5.29289 2.29289ZM5 12.5L5 3H7L7 12.5H5Z" transform="rotate(45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('left')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 7.5L7 3.5V11.5L2 7.5Z" transform="scale(1.5)" fill="currentColor"></path></svg>
-                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up-left')} disabled={!selectedTextId}><ArrowUpLeft className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up')} disabled={!selectedTextId}><ArrowUp className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('up-right')} disabled={!selectedTextId}><ArrowUpRight className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('left')} disabled={!selectedTextId}><ArrowLeftIcon className="h-5 w-5"/></Button>
                   <Button variant="outline" size="icon" onClick={() => handleRotateText('cw')} disabled={!selectedTextId}><RotateCw className="h-5 w-5"/></Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('right')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 7.5L8 11.5V3.5L13 7.5Z" transform="scale(1.5)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down-left')} disabled={!selectedTextId}>
-                    <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.2071 9.20711C13.5976 8.81658 13.5976 8.18342 13.2071 7.79289C12.8166 7.40237 12.1834 7.40237 11.7929 7.79289L9 10.5858L6.20711 7.79289C5.81658 7.40237 5.18342 7.40237 4.79289 7.79289C4.40237 8.18342 4.40237 8.81658 4.79289 9.20711L8.29289 12.7071ZM8 2.5L8 12L10 12L10 2.5H8Z" transform="rotate(45 6.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down')} disabled={!selectedTextId}>
-                      <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 13L3.5 8H11.5L7.5 13Z" transform="scale(1.5)" fill="currentColor"></path></svg>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down-right')} disabled={!selectedTextId}>
-                    <svg width="20" height="20" viewBox="0.0 0.0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.29289 12.7071C5.68342 13.0976 6.31658 13.0976 6.70711 12.7071L10.2071 9.20711C10.5976 8.81658 10.5976 8.18342 10.2071 7.79289C9.81658 7.40237 9.18342 7.40237 8.79289 7.79289L6 10.5858L3.20711 7.79289C2.81658 7.40237 2.18342 7.40237 1.79289 7.79289C1.40237 8.18342 1.40237 8.81658 1.79289 9.20711L5.29289 12.7071ZM5 2.5L5 12H7L7 2.5H5Z" transform="rotate(-45 8.5 7.5) scale(0.9)" fill="currentColor"></path></svg>
-                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('right')} disabled={!selectedTextId}><ArrowRight className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down-left')} disabled={!selectedTextId}><ArrowDownLeft className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down')} disabled={!selectedTextId}><ArrowDown className="h-5 w-5"/></Button>
+                  <Button variant="outline" size="icon" onClick={() => handleMoveText('down-right')} disabled={!selectedTextId}><ArrowDownRight className="h-5 w-5"/></Button>
               </div>
               <div className="grid grid-cols-2 grid-rows-3 gap-2.5 items-center justify-items-center">
                   <Button variant="outline" size="icon" onClick={() => handleScaleText('down')} disabled={!selectedTextId}><ZoomOut className="h-5 w-5"/></Button>
