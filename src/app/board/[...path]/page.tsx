@@ -182,9 +182,9 @@ export default function BoardPage() {
   return (
     <>
       <BackgroundAnimation />
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent">
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-transparent z-10">
         {/* Header */}
-        <header className="fixed top-0 left-0 w-full h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
+        <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
               <ArrowLeft className="h-4 w-4" />
@@ -208,7 +208,7 @@ export default function BoardPage() {
 
         {/* Thumbnails */}
         {boardData && (
-          <div className="fixed top-12 left-0 w-full h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border z-20">
+          <div className="flex-shrink-0 h-20 grid grid-cols-[1fr_auto] bg-card/80 backdrop-blur-sm border-b border-border">
             {/* Thumbs */}
             <div className="flex items-center p-2 gap-2 overflow-x-auto overflow-y-hidden">
                 {boardData.slides.map((slide, index) => (
@@ -263,7 +263,7 @@ export default function BoardPage() {
         )}
 
         {/* Toolbar */}
-        <div className="fixed top-[128px] left-0 w-full h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border z-20">
+        <div className="flex-shrink-0 h-12 flex items-center px-3 box-border bg-card/80 backdrop-blur-sm border-b border-border">
           <Button variant="ghost" size="icon" onClick={handleAddText}>
             <CaseSensitive className="h-5 w-5" />
             <span className="sr-only">Add Text</span>
@@ -271,7 +271,7 @@ export default function BoardPage() {
         </div>
         
         {/* Canvas Stage */}
-        <main className="fixed top-[176px] left-0 w-full flex items-center justify-center bg-transparent z-10" style={{ height: 'calc(100vh - 176px)'}}>
+        <main className="flex-grow w-full flex items-center justify-center bg-transparent">
             {error && <p className="text-destructive">{error}</p>}
             
             {!boardData && !error && <p className="text-muted-foreground">Loading board...</p>}
