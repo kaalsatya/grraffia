@@ -537,6 +537,12 @@ export default function BoardPage() {
 
   const currentSlide = boardData?.slides[currentSlideIndex];
   const selectedItem = currentSlide?.items.find(i => i.id === selectedItemId);
+  const sortedItems = currentSlide ? [...currentSlide.items].sort((a, b) => {
+    if (a.type === 'image' && b.type === 'text') return -1;
+    if (a.type === 'text' && b.type === 'image') return 1;
+    return 0;
+  }) : [];
+
 
   return (
     <div className="flex flex-col h-screen w-screen bg-black overflow-hidden">
@@ -643,7 +649,7 @@ export default function BoardPage() {
           <div className="w-full h-full flex flex-col">
             <div className="w-full aspect-video bg-white">
                 <div id="canvas-container" className="w-full h-full relative overflow-hidden">
-                    {currentSlide.items.map((item) => (
+                    {sortedItems.map((item) => (
                       item.type === 'text' ? (
                       <div
                         key={item.id}
