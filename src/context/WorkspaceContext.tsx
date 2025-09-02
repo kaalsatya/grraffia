@@ -78,7 +78,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         setRootDirectoryHandle(handle);
         setCurrentDirectoryHandle(handle);
         setPath([{ name: handle.name, handle }]);
-        // No need to call getDirectoryContents here, useEffect will do it.
+        await getDirectoryContents(handle);
       } else {
         setError('Your browser does not support the File System Access API.');
       }
@@ -90,14 +90,15 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         console.error(err);
       }
     }
-  }, []);
+  }, [getDirectoryContents]);
 
-  const handleBreadcrumbClick = useCallback((index: number) => {
+  const handleBreadcrumbClick = useCallback(async (index: number) => {
     const newPath = path.slice(0, index + 1);
     const newHandle = newPath[newPath.length - 1].handle;
     setPath(newPath);
     setCurrentDirectoryHandle(newHandle);
-  }, [path]);
+    await getDirectoryContents(newHandle);
+  }, [path, getDirectoryContents]);
 
   const handleBackClick = useCallback(() => {
     if (path.length > 1) {
@@ -105,17 +106,18 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [path, handleBreadcrumbClick]);
 
-  const handleItemClick = useCallback((item: FileSystemItem) => {
+  const handleItemClick = useCallback(async (item: FileSystemItem) => {
     if (item.kind === 'directory' && item.handle.kind === 'directory') {
       setCurrentDirectoryHandle(item.handle);
       setPath(prevPath => [...prevPath, { name: item.name, handle: item.handle }]);
+      await getDirectoryContents(item.handle);
     } else if (item.kind === 'file') {
       const pathParts = path.slice(1).map(p => p.name);
       pathParts.push(item.name);
       const fullPath = pathParts.join('/');
       return fullPath;
     }
-  }, [path]);
+  }, [path, getDirectoryContents]);
 
   const createFile = useCallback(async (fileName: string, content: string) => {
     if (!currentDirectoryHandle) return;
@@ -228,13 +230,6 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       await writable.close();
   }, [getFileHandle]);
 
-  useEffect(() => {
-    if (currentDirectoryHandle) {
-        getDirectoryContents(currentDirectoryHandle)
-    }
-  }, [currentDirectoryHandle, getDirectoryContents]);
-
-
   return (
     <WorkspaceContext.Provider
       value={{
@@ -260,3 +255,5 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     </WorkspaceContext.Provider>
   );
 };
+
+    

@@ -32,8 +32,6 @@ import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-
 
 interface BaseItem {
   id: string;
@@ -78,9 +76,8 @@ export default function BoardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false);
-  const [isInserting, setIsInserting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [crop, setCrop] = useState<Crop>();
-  const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,7 +103,7 @@ export default function BoardPage() {
     const parts = filePath.split('/');
     parts.pop();
     return parts.join('/');
-  }, [getFilePath])
+  }, [getFilePath]);
 
   const getFileName = () => {
     const filePath = getFilePath();
@@ -115,12 +112,11 @@ export default function BoardPage() {
     return parts[parts.length - 1];
   };
 
-  const saveBoard = useCallback(async (data: BoardData | null) => {
+  const saveBoard = useCallback(async (data: BoardData | null = boardData) => {
     if (!data) return;
     const filePath = getFilePath();
     if (!filePath) return;
     try {
-      // Remove temporary src from images before saving
       const dataToSave = {
         ...data,
         slides: data.slides.map(slide => ({
@@ -143,7 +139,7 @@ export default function BoardPage() {
       setShowSaveErrorAlert(true);
       console.error(err);
     }
-  }, [getFilePath, writeFile, toast]);
+  }, [getFilePath, writeFile, toast, boardData]);
 
   useEffect(() => {
     const loadBoard = async () => {
@@ -158,7 +154,7 @@ export default function BoardPage() {
           ...data,
           slides: await Promise.all(data.slides.map(async (slide) => ({
             ...slide,
-            items: await Promise.all((slide.items || (slide as any).texts?.map((t: any) => ({...t, type: 'text'})) || []).map(async (item: any) => {
+            items: await Promise.all((slide.items || []).map(async (item: any) => {
               const baseItem = {
                 id: item.id || `item-${Date.now()}-${Math.random()}`,
                 position: item.position || [50, 50],
@@ -189,8 +185,7 @@ export default function BoardPage() {
                   src: imageSrc,
                 };
               }
-
-              // Default to text if type is not set for backwards compatibility
+              
               return {
                 ...baseItem,
                 type: 'text',
@@ -212,7 +207,6 @@ export default function BoardPage() {
     loadBoard();
   }, [getFilePath, getFileDirectory, readFile, rootDirectoryHandle]);
 
-
   const updateItem = (id: string, updates: Partial<BoardItem>) => {
     if (!boardData) return;
     const updatedSlides = boardData.slides.map((slide, index) => {
@@ -228,8 +222,7 @@ export default function BoardPage() {
     });
     setBoardData({ ...boardData, slides: updatedSlides });
   };
-
-
+  
   const handleAddSlide = () => {
     if (!boardData) return;
     const newSlide: Slide = {
@@ -241,10 +234,7 @@ export default function BoardPage() {
         ...boardData.slides.slice(0, currentSlideIndex + 1),
         newSlide,
         ...boardData.slides.slice(currentSlideIndex + 1),
-    ].map((slide, index) => ({
-        ...slide,
-        slide_number: index + 1,
-    }));
+    ].map((slide, index) => ({ ...slide, slide_number: index + 1 }));
 
     const updatedData = { ...boardData, slides: newSlides };
     setBoardData(updatedData);
@@ -254,15 +244,10 @@ export default function BoardPage() {
   const handleDeleteSlide = () => {
     if (boardData && boardData.slides.length > 1) {
       const updatedSlides = boardData.slides.filter((_, index) => index !== currentSlideIndex);
-      const renumberedSlides = updatedSlides.map((slide, index) => ({
-          ...slide,
-          slide_number: index + 1
-      }));
+      const renumberedSlides = updatedSlides.map((slide, index) => ({ ...slide, slide_number: index + 1 }));
       const newData = { ...boardData, slides: renumberedSlides };
       setBoardData(newData);
-      
-      const newIndex = Math.max(0, currentSlideIndex - 1);
-      setCurrentSlideIndex(newIndex);
+      setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
     }
   };
   
@@ -273,7 +258,6 @@ export default function BoardPage() {
 
   const handleAddText = () => {
     if (!boardData) return;
-
     const newText: TextItem = {
       id: `text-${Date.now()}-${Math.random()}`,
       type: 'text',
@@ -283,29 +267,20 @@ export default function BoardPage() {
       width: 200,
       rotation: 0,
     };
-
     const updatedSlides = boardData.slides.map((slide, index) => {
       if (index === currentSlideIndex) {
-        return {
-          ...slide,
-          items: [...slide.items, newText],
-        };
+        return { ...slide, items: [...slide.items, newText] };
       }
       return slide;
     });
-    
     setBoardData({ ...boardData, slides: updatedSlides });
   };
   
   const handleTextDoubleClick = (textId: string) => {
     setEditingTextId(textId);
-    setSelectedItemId(textId); // Also select it
+    setSelectedItemId(textId);
   };
 
-  const handleTextChange = (textId: string, newContent: string) => {
-    updateItem(textId, { content: newContent } as Partial<TextItem>);
-  };
-  
   const handleTextBlur = () => {
     setEditingTextId(null);
   };
@@ -329,7 +304,6 @@ export default function BoardPage() {
         case 'down-left': newY += step; newX -= step; break;
         case 'down-right': newY += step; newX += step; break;
     }
-
     updateItem(selectedItemId, { position: [newX, newY] });
   };
   
@@ -337,11 +311,8 @@ export default function BoardPage() {
     if (!selectedItemId) return;
     const currentItem = boardData?.slides[currentSlideIndex].items.find(t => t.id === selectedItemId);
     if (!currentItem) return;
-
     const rotationStep = 5; // degrees
-    const newRotation = currentItem.rotation + rotationStep
-    
-    updateItem(selectedItemId, { rotation: newRotation });
+    updateItem(selectedItemId, { rotation: currentItem.rotation + rotationStep });
   };
 
   const handleScaleItem = (scaleDirection: 'up' | 'down') => {
@@ -353,7 +324,7 @@ export default function BoardPage() {
         const scaleStep = 2; // pixels
         const newFontSize = scaleDirection === 'up'
             ? currentItem.font_size + scaleStep
-            : Math.max(8, currentItem.font_size - scaleStep); // minimum font size of 8
+            : Math.max(8, currentItem.font_size - scaleStep);
         updateItem(selectedItemId, { font_size: newFontSize } as Partial<TextItem>);
       } else if (currentItem.type === 'image') {
           const scaleStep = 0.1;
@@ -367,13 +338,11 @@ export default function BoardPage() {
   const handleWidthChange = (changeDirection: 'increase' | 'decrease') => {
       if (!selectedItemId) return;
       const currentItem = boardData?.slides[currentSlideIndex].items.find(t => t.id === selectedItemId);
-      if (!currentItem) return;
-
+      if (!currentItem || currentItem.type !== 'text') return;
       const widthStep = 10; // pixels
       const newWidth = changeDirection === 'increase'
           ? currentItem.width + widthStep
-          : Math.max(50, currentItem.width - widthStep); // minimum width of 50
-      
+          : Math.max(50, currentItem.width - widthStep);
       updateItem(selectedItemId, { width: newWidth });
   };
 
@@ -382,7 +351,7 @@ export default function BoardPage() {
       
       const itemToDelete = boardData.slides[currentSlideIndex].items.find(item => item.id === selectedItemId);
 
-      if (itemToDelete && itemToDelete.type === 'image') {
+      if (itemToDelete?.type === 'image') {
         const dir = getFileDirectory();
         const imagePath = dir ? `${dir}/${itemToDelete.filename}` : itemToDelete.filename;
         try {
@@ -396,10 +365,7 @@ export default function BoardPage() {
 
       const updatedSlides = boardData.slides.map((slide, index) => {
           if (index === currentSlideIndex) {
-              return {
-                  ...slide,
-                  items: slide.items.filter(item => item.id !== selectedItemId)
-              };
+              return { ...slide, items: slide.items.filter(item => item.id !== selectedItemId) };
           }
           return slide;
       });
@@ -408,10 +374,9 @@ export default function BoardPage() {
       setSelectedItemId(null);
   };
   
-  // Image Crop logic
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined); // Makes crop preview update between images.
+      setCrop(undefined);
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         const imageDataUrl = reader.result?.toString() || null;
@@ -429,14 +394,14 @@ export default function BoardPage() {
               const data = imageData.data;
               for (let i = 0; i < data.length; i += 4) {
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                data[i] = avg; // red
-                data[i + 1] = avg; // green
-                data[i + 2] = avg; // blue
+                data[i] = avg; 
+                data[i + 1] = avg; 
+                data[i + 2] = avg; 
               }
               ctx.putImageData(imageData, 0, 0);
               setSourceImage(canvas.toDataURL());
             } else {
-              setSourceImage(imageDataUrl); // Fallback to original
+              setSourceImage(imageDataUrl);
             }
           };
         }
@@ -449,22 +414,13 @@ export default function BoardPage() {
   };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-     // Set a default free crop
-    setCrop({
-        unit: '%',
-        width: 50,
-        height: 50,
-        x: 25,
-        y: 25,
-    });
+    setCrop({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
   };
 
-  async function getProcessedImage(
+  const getProcessedImage = async (
     image: HTMLImageElement,
-    crop: Crop,
-    brightness: number,
-    contrast: number
-  ): Promise<{ dataUrl: string, blob: Blob }> {
+    crop: Crop
+  ): Promise<{ dataUrl: string, blob: Blob }> => {
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
@@ -474,30 +430,14 @@ export default function BoardPage() {
     canvas.height = cropHeight;
     const ctx = canvas.getContext('2d');
 
-    if (!ctx) {
-      throw new Error("Could not get canvas context");
-    }
+    if (!ctx) throw new Error("Could not get canvas context");
 
     ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
-    
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      cropWidth,
-      cropHeight
-    );
+    ctx.drawImage(image, crop.x * scaleX, crop.y * scaleY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
     
     return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
-            if (!blob) {
-                reject(new Error('Canvas is empty'));
-                return;
-            }
+            if (!blob) return reject(new Error('Canvas is empty'));
             const dataUrl = canvas.toDataURL('image/png');
             resolve({ dataUrl, blob });
         }, 'image/png');
@@ -505,22 +445,22 @@ export default function BoardPage() {
   }
 
   const handleInsertImage = async () => {
-    if (!completedCrop || !imgRef.current) return;
+    if (!crop || !imgRef.current) return;
     
-    setIsInserting(true);
+    setIsLoading(true);
     try {
-        const { blob, dataUrl } = await getProcessedImage(imgRef.current, completedCrop, brightness, contrast);
+        const { blob, dataUrl } = await getProcessedImage(imgRef.current, crop);
         
         const newFilename = `edited-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
         const fullPath = fileDirectory ? `${fileDirectory}/${newFilename}` : newFilename;
-        
         await writeFile(fullPath, blob as any);
 
-        const defaultWidth = 300;
         const img = new Image();
         img.src = dataUrl;
         await new Promise(resolve => img.onload = resolve);
+        
+        const defaultWidth = 300;
         const aspectRatio = img.width / img.height;
         
         const newImageItem: ImageItem = {
@@ -549,7 +489,7 @@ export default function BoardPage() {
         console.error(e);
         toast({ title: "Image processing failed", description: "Could not process the image.", variant: "destructive" });
     } finally {
-        setIsInserting(false);
+        setIsLoading(false);
         setIsEditingImage(false);
         setSourceImage(null);
         if (fileInputRef.current) {
@@ -557,7 +497,6 @@ export default function BoardPage() {
         }
     }
   }
-
 
   const currentSlide = boardData?.slides[currentSlideIndex];
   const selectedItem = currentSlide?.items.find(i => i.id === selectedItemId);
@@ -582,7 +521,7 @@ export default function BoardPage() {
           </h1>
         </div>
         <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => saveBoard(boardData)}>
+            <Button variant="ghost" size="icon" onClick={() => saveBoard()}>
               <Save className="h-5 w-5" />
               <span className="sr-only">Save Board</span>
             </Button>
@@ -701,7 +640,7 @@ export default function BoardPage() {
                           {editingTextId === item.id ? (
                             <Textarea
                                 value={item.content}
-                                onChange={(e) => handleTextChange(item.id, e.target.value)}
+                                onChange={(e) => updateItem(item.id, { content: e.target.value })}
                                 onBlur={handleTextBlur}
                                 autoFocus
                                 className="w-full h-full p-0 m-0 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -798,12 +737,12 @@ export default function BoardPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => saveBoard(boardData)}>Retry</AlertDialogAction>
+            <AlertDialogAction onClick={() => saveBoard()}>Retry</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Sheet open={isEditingImage} onOpenChange={(open) => { if (!open) { setIsEditingImage(false); setSourceImage(null); } else { setIsEditingImage(open); } }}>
+      <Sheet open={isEditingImage} onOpenChange={setIsEditingImage}>
         <SheetContent side="bottom" className="h-full md:h-[90%]" onInteractOutside={(e) => e.preventDefault()}>
             <SheetHeader>
                 <SheetTitle>Edit Image</SheetTitle>
@@ -814,7 +753,7 @@ export default function BoardPage() {
                   <ReactCrop
                       crop={crop}
                       onChange={c => setCrop(c)}
-                      onComplete={c => setCompletedCrop(c)}
+                      onComplete={c => setCrop(c)}
                   >
                       <img 
                         ref={imgRef} 
@@ -823,7 +762,7 @@ export default function BoardPage() {
                         alt="Crop preview" 
                         style={{
                             filter: `brightness(${brightness}%) contrast(${contrast}%)`,
-                            maxHeight: '70vh' // Constrain image preview height
+                            maxHeight: '70vh'
                         }}
                         className="object-contain"
                       />
@@ -854,9 +793,9 @@ export default function BoardPage() {
               </div>
             )}
             <SheetFooter className="absolute bottom-0 right-0 w-full bg-background pt-4 pb-6 px-6 border-t">
-                <Button onClick={handleInsertImage} disabled={isInserting}>
-                    {isInserting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isInserting ? "Inserting..." : "Insert Image"}
+                <Button onClick={handleInsertImage} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading ? "Inserting..." : "Insert Image"}
                 </Button>
             </SheetFooter>
         </SheetContent>
@@ -864,3 +803,5 @@ export default function BoardPage() {
     </div>
   );
 }
+
+    
