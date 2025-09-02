@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';

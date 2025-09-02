@@ -163,6 +163,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       if (!fileName) return null;
 
       for (const part of parts) {
+          if (!part) continue;
           try {
             currentHandle = await currentHandle.getDirectoryHandle(part, { create });
           } catch (e) {
@@ -197,8 +198,9 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteItemByPath = useCallback(async (filePath: string) => {
     const parts = filePath.split('/');
-    const fileName = parts.pop();
+    const fileName = parts.pop() || '';
     const dirPath = parts.join('/');
+    
     if (!fileName) {
         throw new Error("Invalid file path for deletion");
     }
@@ -207,7 +209,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     if (!directoryHandle) {
         throw new Error(`Could not find directory for path: ${dirPath}`);
     }
-    await directoryHandle.removeEntry(fileName);
+    await directoryHandle.removeEntry(fileName, { recursive: true });
   }, [getDirectoryHandle]);
 
 
@@ -255,5 +257,3 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     </WorkspaceContext.Provider>
   );
 };
-
-    
