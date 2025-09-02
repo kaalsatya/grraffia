@@ -769,25 +769,27 @@ export default function BoardPage() {
                   </ReactCrop>
                 </div>
                 <div className="flex flex-col gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
-                         <Slider 
-                            id="brightness-slider"
-                            value={[brightness]} 
-                            onValueChange={(val) => setBrightness(val[0])}
-                            max={200}
-                            step={1}
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="contrast-slider">Contrast: {contrast}%</Label>
-                         <Slider 
-                            id="contrast-slider"
-                            value={[contrast]} 
-                            onValueChange={(val) => setContrast(val[0])}
-                            max={200}
-                            step={1}
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
+                             <Slider 
+                                id="brightness-slider"
+                                value={[brightness]} 
+                                onValueChange={(val) => setBrightness(val[0])}
+                                max={200}
+                                step={1}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="contrast-slider">Contrast: {contrast}%</Label>
+                             <Slider 
+                                id="contrast-slider"
+                                value={[contrast]} 
+                                onValueChange={(val) => setContrast(val[0])}
+                                max={200}
+                                step={1}
+                            />
+                        </div>
                     </div>
                 </div>
               </div>
@@ -804,4 +806,5 @@ export default function BoardPage() {
   );
 }
 
+    
     
