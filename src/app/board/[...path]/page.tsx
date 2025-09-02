@@ -19,12 +19,9 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -416,7 +413,34 @@ export default function BoardPage() {
     if (e.target.files && e.target.files.length > 0) {
       setCrop(undefined); // Makes crop preview update between images.
       const reader = new FileReader();
-      reader.addEventListener('load', () => setSourceImage(reader.result?.toString() || null));
+      reader.addEventListener('load', () => {
+        const imageDataUrl = reader.result?.toString() || null;
+        if (imageDataUrl) {
+          const img = new Image();
+          img.src = imageDataUrl;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const data = imageData.data;
+              for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = avg; // red
+                data[i + 1] = avg; // green
+                data[i + 2] = avg; // blue
+              }
+              ctx.putImageData(imageData, 0, 0);
+              setSourceImage(canvas.toDataURL());
+            } else {
+              setSourceImage(imageDataUrl); // Fallback to original
+            }
+          };
+        }
+      });
       reader.readAsDataURL(e.target.files[0]);
       setIsEditingImage(true);
       setBrightness(100);
@@ -805,7 +829,7 @@ export default function BoardPage() {
                       />
                   </ReactCrop>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
                          <Slider 
