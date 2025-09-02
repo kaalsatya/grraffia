@@ -32,7 +32,7 @@ const initialBoardContent = `{
         {
           "content": "Welcome to your presentation!",
           "position": [50, 50],
-          "font_size": 48
+          "font_size": 36
         }
       ],
       "images": []
