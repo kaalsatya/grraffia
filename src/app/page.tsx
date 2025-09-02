@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useContext } from 'react';
@@ -28,14 +29,17 @@ const initialBoardContent = `{
   "slides": [
     {
       "slide_number": 1,
-      "texts": [
+      "items": [
         {
+          "id": "initial-text",
+          "type": "text",
           "content": "Welcome to your presentation!",
           "position": [50, 50],
-          "font_size": 36
+          "font_size": 36,
+          "width": 400,
+          "rotation": 0
         }
-      ],
-      "images": []
+      ]
     }
   ]
 }`;
@@ -44,6 +48,17 @@ export default function Home() {
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(true);
   
+  useEffect(() => {
+    if (sessionStorage.getItem('welcomeScreenShown')) {
+      setShowWelcome(false);
+    }
+  }, []);
+
+  const handleGetStarted = () => {
+    sessionStorage.setItem('welcomeScreenShown', 'true');
+    setShowWelcome(false);
+  }
+
   const context = useContext(WorkspaceContext);
   if (!context) {
     throw new Error("Home component must be used within a WorkspaceProvider");
@@ -117,7 +132,7 @@ export default function Home() {
               A new way to interact with your file system.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Button onClick={() => setShowWelcome(false)} size="lg">
+              <Button onClick={handleGetStarted} size="lg">
                 Get Started
               </Button>
             </div>
