@@ -17,14 +17,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -39,7 +31,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -103,7 +95,7 @@ export default function BoardPage() {
   if (!context) {
     throw new Error("BoardPage must be used within a WorkspaceProvider");
   }
-  const { readFile, writeFile, rootDirectoryHandle } = context;
+  const { readFile, writeFile, rootDirectoryHandle, deleteItemByPath } = context;
 
   const getFilePath = useCallback(() => {
     if (!params.path) return null;
@@ -388,8 +380,22 @@ export default function BoardPage() {
       updateItem(selectedItemId, { width: newWidth });
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
       if (!selectedItemId || !boardData) return;
+      
+      const itemToDelete = boardData.slides[currentSlideIndex].items.find(item => item.id === selectedItemId);
+
+      if (itemToDelete && itemToDelete.type === 'image') {
+        const dir = getFileDirectory();
+        const imagePath = dir ? `${dir}/${itemToDelete.filename}` : itemToDelete.filename;
+        try {
+            await deleteItemByPath(imagePath);
+            toast({ title: "Image file deleted", description: `Successfully deleted ${itemToDelete.filename}`});
+        } catch (e) {
+            console.error("Failed to delete image file", e);
+            toast({ title: "Error deleting file", description: "Could not delete the image file from storage.", variant: "destructive" });
+        }
+      }
 
       const updatedSlides = boardData.slides.map((slide, index) => {
           if (index === currentSlideIndex) {
@@ -776,7 +782,7 @@ export default function BoardPage() {
             </SheetHeader>
             {sourceImage && (
               <div className="grid md:grid-cols-[1fr_250px] gap-8 py-4 h-[calc(100%-120px)]">
-                <div className="flex justify-center items-center p-4 bg-muted/30 rounded-md h-full">
+                <div className="flex justify-center items-center p-4 bg-muted/30 rounded-md h-full overflow-hidden">
                   <ReactCrop
                       crop={crop}
                       onChange={c => setCrop(c)}
@@ -787,8 +793,11 @@ export default function BoardPage() {
                         src={sourceImage} 
                         onLoad={onImageLoad} 
                         alt="Crop preview" 
-                        style={{filter: `brightness(${brightness}%) contrast(${contrast}%)`}}
-                        className="max-h-full object-contain"
+                        style={{
+                            filter: `brightness(${brightness}%) contrast(${contrast}%)`,
+                            maxHeight: '70vh' // Constrain image preview height
+                        }}
+                        className="object-contain"
                       />
                   </ReactCrop>
                 </div>
@@ -816,7 +825,7 @@ export default function BoardPage() {
                 </div>
               </div>
             )}
-            <SheetFooter className="mt-4">
+            <SheetFooter className="absolute bottom-0 right-0 w-full bg-background pt-4 pb-6 px-6 border-t">
                 <SheetClose asChild>
                   <Button variant="outline" onClick={() => {
                       setIsEditingImage(false);

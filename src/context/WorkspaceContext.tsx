@@ -35,6 +35,7 @@ interface WorkspaceContextType {
   createFile: (fileName: string, content: string) => Promise<void>;
   createFolder: (folderName: string) => Promise<void>;
   deleteItem: (item: FileSystemItem) => Promise<void>;
+  deleteItemByPath: (filePath: string) => Promise<void>;
   readFile: (filePath: string, type?: 'read' | 'readwrite') => Promise<string | ArrayBuffer>;
   writeFile: (filePath: string, content: string | Blob) => Promise<void>;
 }
@@ -151,7 +152,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       console.error(err);
     }
   }, [currentDirectoryHandle, getDirectoryContents]);
-
+  
   const getFileHandle = useCallback(async (filePath: string, create = false): Promise<FileSystemFileHandle | null> => {
       if (!rootDirectoryHandle) return null;
       let currentHandle: FileSystemDirectoryHandle = rootDirectoryHandle;
@@ -160,11 +161,52 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       if (!fileName) return null;
 
       for (const part of parts) {
-          currentHandle = await currentHandle.getDirectoryHandle(part, { create });
+          try {
+            currentHandle = await currentHandle.getDirectoryHandle(part, { create });
+          } catch (e) {
+            console.error(`Could not get directory handle for ${part}`, e);
+            return null;
+          }
       }
 
-      return await currentHandle.getFileHandle(fileName, { create });
+      try {
+        return await currentHandle.getFileHandle(fileName, { create });
+      } catch(e) {
+        console.error(`Could not get file handle for ${fileName}`, e);
+        return null;
+      }
   }, [rootDirectoryHandle]);
+  
+  const getDirectoryHandle = useCallback(async (dirPath: string): Promise<FileSystemDirectoryHandle | null> => {
+      if (!rootDirectoryHandle) return null;
+      let currentHandle: FileSystemDirectoryHandle = rootDirectoryHandle;
+      const parts = dirPath.split('/').filter(p => p.length > 0);
+
+      for (const part of parts) {
+          try {
+            currentHandle = await currentHandle.getDirectoryHandle(part, { create: false });
+          } catch(e) {
+            console.error(`Could not access directory ${part}`, e);
+            return null;
+          }
+      }
+      return currentHandle;
+  }, [rootDirectoryHandle]);
+
+  const deleteItemByPath = useCallback(async (filePath: string) => {
+    const parts = filePath.split('/');
+    const fileName = parts.pop();
+    const dirPath = parts.join('/');
+    if (!fileName) {
+        throw new Error("Invalid file path for deletion");
+    }
+
+    const directoryHandle = await getDirectoryHandle(dirPath);
+    if (!directoryHandle) {
+        throw new Error(`Could not find directory for path: ${dirPath}`);
+    }
+    await directoryHandle.removeEntry(fileName);
+  }, [getDirectoryHandle]);
 
 
   const readFile = useCallback(async (filePath: string, type: 'read' | 'readwrite' = 'read'): Promise<string | ArrayBuffer> => {
@@ -209,6 +251,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         createFile,
         createFolder,
         deleteItem,
+        deleteItemByPath,
         readFile,
         writeFile
       }}
