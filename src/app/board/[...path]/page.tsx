@@ -173,7 +173,7 @@ export default function BoardPage() {
                 const imagePath = dir ? `${dir}/${item.filename}` : item.filename;
                 let imageSrc = '';
                 try {
-                  const imageContent = await readFile(imagePath, 'read');
+                  const imageContent = await readFile(imagePath, 'readwrite');
                   const fileType = item.filename.endsWith('png') ? 'image/png' : 'image/jpeg';
                   const file = new File([imageContent], item.filename, { type: fileType});
                   imageSrc = URL.createObjectURL(file);
@@ -777,7 +777,6 @@ export default function BoardPage() {
         <SheetContent side="bottom" className="h-full md:h-[90%]" onInteractOutside={(e) => e.preventDefault()}>
             <SheetHeader>
                 <SheetTitle>Edit Image</SheetTitle>
-                <SheetDescription>Crop and adjust the image before inserting it.</SheetDescription>
             </SheetHeader>
             {sourceImage && (
               <div className="grid md:grid-cols-[1fr_250px] gap-8 py-4 h-[calc(100%-120px)]">
@@ -825,12 +824,6 @@ export default function BoardPage() {
               </div>
             )}
             <SheetFooter className="absolute bottom-0 right-0 w-full bg-background pt-4 pb-6 px-6 border-t">
-                <SheetClose asChild>
-                  <Button variant="outline" onClick={() => {
-                      setIsEditingImage(false);
-                      setSourceImage(null);
-                  }}>Cancel</Button>
-                </SheetClose>
                 <Button onClick={handleInsertImage} disabled={isInserting}>
                     {isInserting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isInserting ? "Inserting..." : "Insert Image"}
