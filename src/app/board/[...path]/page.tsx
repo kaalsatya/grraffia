@@ -425,7 +425,6 @@ export default function BoardPage() {
   };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget;
      // Set a default free crop
     setCrop({
         unit: '%',
@@ -801,7 +800,7 @@ export default function BoardPage() {
                       />
                   </ReactCrop>
                 </div>
-                <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
                          <Slider 
