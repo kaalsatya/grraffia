@@ -112,10 +112,14 @@ export default function Home() {
     });
   };
 
-  const handleItemClick = (item: FileSystemItem) => {
-    const fullPath = contextHandleItemClick(item);
-    if (item.kind === 'file' && fullPath) {
-        router.push(`/board/${encodeURIComponent(fullPath)}`);
+  const handleItemClick = async (item: FileSystemItem) => {
+    if (item.kind === 'file') {
+        const fullPath = await contextHandleItemClick(item);
+        if (fullPath) {
+            router.push(`/board/${encodeURIComponent(fullPath)}`);
+        }
+    } else {
+        contextHandleItemClick(item);
     }
   }
 
