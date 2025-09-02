@@ -24,6 +24,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -78,7 +88,7 @@ export default function BoardPage() {
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
-  const [isCropping, setIsCropping] = useState(false);
+  const [isEditingImage, setIsEditingImage] = useState(false);
   const [isInserting, setIsInserting] = useState(false);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
@@ -171,8 +181,9 @@ export default function BoardPage() {
                 const imagePath = dir ? `${dir}/${item.filename}` : item.filename;
                 let imageSrc = '';
                 try {
-                  const imageContent = await readFile(imagePath);
-                  const file = new File([imageContent], item.filename, { type: 'image/png'});
+                  const imageContent = await readFile(imagePath, 'read');
+                  const fileType = item.filename.endsWith('png') ? 'image/png' : 'image/jpeg';
+                  const file = new File([imageContent], item.filename, { type: fileType});
                   imageSrc = URL.createObjectURL(file);
                 } catch(e) {
                   console.error("Could not load image", imagePath, e);
@@ -401,7 +412,7 @@ export default function BoardPage() {
       const reader = new FileReader();
       reader.addEventListener('load', () => setSourceImage(reader.result?.toString() || null));
       reader.readAsDataURL(e.target.files[0]);
-      setIsCropping(true);
+      setIsEditingImage(true);
       setBrightness(100);
       setContrast(100);
     }
@@ -510,7 +521,7 @@ export default function BoardPage() {
         toast({ title: "Image processing failed", description: "Could not process the image.", variant: "destructive" });
     } finally {
         setIsInserting(false);
-        setIsCropping(false);
+        setIsEditingImage(false);
         setSourceImage(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -527,9 +538,9 @@ export default function BoardPage() {
       {/* Header */}
       <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 box-border bg-card border-b border-border">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Back to Home</span>
+            <span className="sr-only">Back</span>
           </Button>
           <h1 className="text-lg font-semibold truncate">
             {getFileName()}
@@ -649,7 +660,7 @@ export default function BoardPage() {
                           padding: '4px',
                           wordWrap: 'break-word',
                           cursor: 'pointer',
-                          border: selectedItemId === item.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
+                          border: selectedItemId === item.id ? '2px dashed hsl(var(--muted-foreground))' : '2px dashed transparent',
                         }}
                       >
                           {editingTextId === item.id ? (
@@ -757,15 +768,15 @@ export default function BoardPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={isCropping} onOpenChange={(open) => { if (!open) { setIsCropping(false); setSourceImage(null); } else { setIsCropping(open); } }}>
-        <DialogContent className="max-w-4xl">
-            <DialogHeader>
-                <DialogTitle>Edit Image</DialogTitle>
-                <DialogDescription>Crop and adjust the image before inserting it.</DialogDescription>
-            </DialogHeader>
+      <Sheet open={isEditingImage} onOpenChange={(open) => { if (!open) { setIsEditingImage(false); setSourceImage(null); } else { setIsEditingImage(open); } }}>
+        <SheetContent side="bottom" className="h-full md:h-[90%]" onInteractOutside={(e) => e.preventDefault()}>
+            <SheetHeader>
+                <SheetTitle>Edit Image</SheetTitle>
+                <SheetDescription>Crop and adjust the image before inserting it.</SheetDescription>
+            </SheetHeader>
             {sourceImage && (
-              <div className="grid md:grid-cols-[1fr_auto] gap-8 py-4">
-                <div className="flex justify-center items-center p-4 bg-muted/30 rounded-md">
+              <div className="grid md:grid-cols-[1fr_250px] gap-8 py-4 h-[calc(100%-120px)]">
+                <div className="flex justify-center items-center p-4 bg-muted/30 rounded-md h-full">
                   <ReactCrop
                       crop={crop}
                       onChange={c => setCrop(c)}
@@ -777,13 +788,13 @@ export default function BoardPage() {
                         onLoad={onImageLoad} 
                         alt="Crop preview" 
                         style={{filter: `brightness(${brightness}%) contrast(${contrast}%)`}}
-                        className="max-h-[60vh] object-contain"
+                        className="max-h-full object-contain"
                       />
                   </ReactCrop>
                 </div>
                 <div className="space-y-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="brightness-slider" className="text-center">Brightness: {brightness}%</Label>
+                        <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
                          <Slider 
                             id="brightness-slider"
                             value={[brightness]} 
@@ -793,7 +804,7 @@ export default function BoardPage() {
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="contrast-slider" className="text-center">Contrast: {contrast}%</Label>
+                        <Label htmlFor="contrast-slider">Contrast: {contrast}%</Label>
                          <Slider 
                             id="contrast-slider"
                             value={[contrast]} 
@@ -805,18 +816,20 @@ export default function BoardPage() {
                 </div>
               </div>
             )}
-            <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                    setIsCropping(false);
-                    setSourceImage(null);
-                }}>Cancel</Button>
+            <SheetFooter className="mt-4">
+                <SheetClose asChild>
+                  <Button variant="outline" onClick={() => {
+                      setIsEditingImage(false);
+                      setSourceImage(null);
+                  }}>Cancel</Button>
+                </SheetClose>
                 <Button onClick={handleInsertImage} disabled={isInserting}>
                     {isInserting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isInserting ? "Inserting..." : "Insert Image"}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -35,8 +35,8 @@ interface WorkspaceContextType {
   createFile: (fileName: string, content: string) => Promise<void>;
   createFolder: (folderName: string) => Promise<void>;
   deleteItem: (item: FileSystemItem) => Promise<void>;
-  readFile: (filePath: string) => Promise<string>;
-  writeFile: (filePath: string, content: string) => Promise<void>;
+  readFile: (filePath: string, type?: 'read' | 'readwrite') => Promise<string | ArrayBuffer>;
+  writeFile: (filePath: string, content: string | Blob) => Promise<void>;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextType | null>(null);
@@ -77,7 +77,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         setRootDirectoryHandle(handle);
         setCurrentDirectoryHandle(handle);
         setPath([{ name: handle.name, handle }]);
-        await getDirectoryContents(handle);
+        // No need to call getDirectoryContents here, useEffect will do it.
       } else {
         setError('Your browser does not support the File System Access API.');
       }
@@ -89,15 +89,14 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
         console.error(err);
       }
     }
-  }, [getDirectoryContents]);
+  }, []);
 
   const handleBreadcrumbClick = useCallback((index: number) => {
     const newPath = path.slice(0, index + 1);
     const newHandle = newPath[newPath.length - 1].handle;
     setPath(newPath);
     setCurrentDirectoryHandle(newHandle);
-    getDirectoryContents(newHandle);
-  }, [path, getDirectoryContents]);
+  }, [path]);
 
   const handleBackClick = useCallback(() => {
     if (path.length > 1) {
@@ -109,14 +108,13 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     if (item.kind === 'directory' && item.handle.kind === 'directory') {
       setCurrentDirectoryHandle(item.handle);
       setPath(prevPath => [...prevPath, { name: item.name, handle: item.handle }]);
-      getDirectoryContents(item.handle);
     } else if (item.kind === 'file') {
       const pathParts = path.slice(1).map(p => p.name);
       pathParts.push(item.name);
       const fullPath = pathParts.join('/');
       return fullPath;
     }
-  }, [path, getDirectoryContents]);
+  }, [path]);
 
   const createFile = useCallback(async (fileName: string, content: string) => {
     if (!currentDirectoryHandle) return;
@@ -169,15 +167,18 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   }, [rootDirectoryHandle]);
 
 
-  const readFile = useCallback(async (filePath: string): Promise<string> => {
+  const readFile = useCallback(async (filePath: string, type: 'read' | 'readwrite' = 'read'): Promise<string | ArrayBuffer> => {
     const fileHandle = await getFileHandle(filePath);
     if (!fileHandle) throw new Error("File not found");
     const file = await fileHandle.getFile();
+    if(type === 'readwrite') {
+        return await file.arrayBuffer();
+    }
     return await file.text();
   }, [getFileHandle]);
 
 
-  const writeFile = useCallback(async (filePath: string, content: string): Promise<void> => {
+  const writeFile = useCallback(async (filePath: string, content: string | Blob): Promise<void> => {
       const fileHandle = await getFileHandle(filePath, true);
       if (!fileHandle) throw new Error("Could not get file handle");
       const writable = await fileHandle.createWritable();
