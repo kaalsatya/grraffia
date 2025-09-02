@@ -148,7 +148,7 @@ export default function BoardPage() {
 
       try {
         const fileContent = await readFile(filePath);
-        const data = JSON.parse(fileContent) as BoardData;
+        const data = JSON.parse(fileContent as string) as BoardData;
         
         const dataWithDefaults: BoardData = {
           ...data,
@@ -168,8 +168,8 @@ export default function BoardPage() {
                 try {
                   const imageContent = await readFile(imagePath, 'readwrite');
                   const fileType = item.filename.endsWith('png') ? 'image/png' : 'image/jpeg';
-                  const file = new File([imageContent], item.filename, { type: fileType});
-                  imageSrc = URL.createObjectURL(file);
+                  const blob = new Blob([imageContent], { type: fileType });
+                  imageSrc = URL.createObjectURL(blob);
                 } catch(e) {
                   console.error("Could not load image", imagePath, e);
                   imageSrc = 'https://placehold.co/300x200/EEE/31343C?text=Not+Found'
@@ -414,7 +414,7 @@ export default function BoardPage() {
   };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    setCrop({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
+    // No aspect ratio constraint
   };
 
   const getProcessedImage = async (
@@ -424,8 +424,13 @@ export default function BoardPage() {
     const canvas = document.createElement('canvas');
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    const cropWidth = Math.floor(crop.width * scaleX);
-    const cropHeight = Math.floor(crop.height * scaleY);
+    
+    // Ensure crop dimensions are defined
+    const cropWidth = crop.width ? Math.floor(crop.width * scaleX) : image.naturalWidth;
+    const cropHeight = crop.height ? Math.floor(crop.height * scaleY) : image.naturalHeight;
+    const cropX = crop.x ? crop.x * scaleX : 0;
+    const cropY = crop.y ? crop.y * scaleY : 0;
+
     canvas.width = cropWidth;
     canvas.height = cropHeight;
     const ctx = canvas.getContext('2d');
@@ -433,7 +438,7 @@ export default function BoardPage() {
     if (!ctx) throw new Error("Could not get canvas context");
 
     ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
-    ctx.drawImage(image, crop.x * scaleX, crop.y * scaleY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
     
     return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
@@ -445,11 +450,13 @@ export default function BoardPage() {
   }
 
   const handleInsertImage = async () => {
-    if (!crop || !imgRef.current) return;
+    if (!imgRef.current) return;
+    const finalCrop = crop || { x: 0, y: 0, width: imgRef.current.width, height: imgRef.current.height, unit: 'px' };
+
     
     setIsLoading(true);
     try {
-        const { blob, dataUrl } = await getProcessedImage(imgRef.current, crop);
+        const { blob, dataUrl } = await getProcessedImage(imgRef.current, finalCrop);
         
         const newFilename = `edited-${Date.now()}.png`;
         const fileDirectory = getFileDirectory();
@@ -806,5 +813,4 @@ export default function BoardPage() {
   );
 }
 
-    
     
