@@ -22,7 +22,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-  SheetDescription,
 } from '@/components/ui/sheet';
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -198,9 +197,13 @@ export default function BoardPage() {
           })))
         };
         setBoardData(dataWithDefaults);
-
+        setError(null);
       } catch (err) {
-        setError('Failed to load board data.');
+        if (err instanceof Error) {
+          setError(`Failed to load board data: ${err.message}`);
+        } else {
+          setError('An unknown error occurred while loading board data.');
+        }
         console.error(err);
       }
     };
@@ -681,7 +684,13 @@ export default function BoardPage() {
                                 border: selectedItemId === item.id ? '2px dashed hsl(var(--primary))' : '2px dashed transparent',
                             }}
                         >
-                            <img src={item.src} alt={item.filename} className="w-full h-full object-contain" />
+                            {item.src ? (
+                                <img src={item.src} alt={item.filename} className="w-full h-full object-contain" />
+                            ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground"/>
+                                </div>
+                            )}
                         </div>
                       )
                     ))}

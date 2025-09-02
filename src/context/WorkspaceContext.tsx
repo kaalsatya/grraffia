@@ -7,7 +7,6 @@ import React,
   useState,
   useCallback,
   ReactNode,
-  useEffect
 } from 'react';
 
 export interface FileSystemItem {
@@ -158,16 +157,15 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   const getFileHandle = useCallback(async (filePath: string, create = false): Promise<FileSystemFileHandle | null> => {
       if (!rootDirectoryHandle) return null;
       let currentHandle: FileSystemDirectoryHandle = rootDirectoryHandle;
-      const parts = filePath.split('/');
+      const parts = filePath.split('/').filter(p => p);
       const fileName = parts.pop();
       if (!fileName) return null;
 
       for (const part of parts) {
-          if (!part) continue;
           try {
             currentHandle = await currentHandle.getDirectoryHandle(part, { create });
           } catch (e) {
-            console.error(`Could not get directory handle for ${part}`, e);
+            console.error(`Could not get directory handle for ${part} in path ${filePath}`, e);
             return null;
           }
       }
@@ -175,21 +173,21 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       try {
         return await currentHandle.getFileHandle(fileName, { create });
       } catch(e) {
-        console.error(`Could not get file handle for ${fileName}`, e);
+        console.error(`Could not get file handle for ${fileName} in path ${filePath}`, e);
         return null;
       }
   }, [rootDirectoryHandle]);
   
-  const getDirectoryHandle = useCallback(async (dirPath: string): Promise<FileSystemDirectoryHandle | null> => {
+  const getDirectoryHandle = useCallback(async (dirPath: string, create = false): Promise<FileSystemDirectoryHandle | null> => {
       if (!rootDirectoryHandle) return null;
       let currentHandle: FileSystemDirectoryHandle = rootDirectoryHandle;
       const parts = dirPath.split('/').filter(p => p.length > 0);
 
       for (const part of parts) {
           try {
-            currentHandle = await currentHandle.getDirectoryHandle(part, { create: false });
+            currentHandle = await currentHandle.getDirectoryHandle(part, { create });
           } catch(e) {
-            console.error(`Could not access directory ${part}`, e);
+            console.error(`Could not access directory ${part} in path ${dirPath}`, e);
             return null;
           }
       }
@@ -197,7 +195,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
   }, [rootDirectoryHandle]);
 
   const deleteItemByPath = useCallback(async (filePath: string) => {
-    const parts = filePath.split('/');
+    const parts = filePath.split('/').filter(p => p);
     const fileName = parts.pop() || '';
     const dirPath = parts.join('/');
     
@@ -215,7 +213,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
 
   const readFile = useCallback(async (filePath: string, type: 'read' | 'readwrite' = 'read'): Promise<string | ArrayBuffer> => {
     const fileHandle = await getFileHandle(filePath);
-    if (!fileHandle) throw new Error("File not found");
+    if (!fileHandle) throw new Error(`File not found at path: ${filePath}`);
     const file = await fileHandle.getFile();
     if(type === 'readwrite') {
         return await file.arrayBuffer();
@@ -226,7 +224,7 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
 
   const writeFile = useCallback(async (filePath: string, content: string | Blob): Promise<void> => {
       const fileHandle = await getFileHandle(filePath, true);
-      if (!fileHandle) throw new Error("Could not get file handle");
+      if (!fileHandle) throw new Error(`Could not get file handle for path: ${filePath}`);
       const writable = await fileHandle.createWritable();
       await writable.write(content);
       await writable.close();
