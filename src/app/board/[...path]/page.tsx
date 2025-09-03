@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useContext, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, CaseSensitive, Send, ZoomIn, ZoomOut, RotateCw, ChevronsLeft, ChevronsRight, ArrowUpLeft, ArrowUpRight, ArrowDownLeft, ArrowDownRight, ImageIcon, Loader2, ArrowUp, ArrowDown, ArrowRight, Sigma } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +33,8 @@ import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { GraphingCanvas } from '@/components/GraphingCanvas';
+import html2canvas from 'html2canvas';
 
 interface BaseItem {
   id: string;
@@ -85,6 +87,7 @@ export default function BoardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
+  const [isGraphingSheetOpen, setIsGraphingSheetOpen] = useState(false);
 
 
   const context = useContext(WorkspaceContext);
@@ -458,6 +461,15 @@ export default function BoardPage() {
         }, 'image/png');
     });
   }
+  
+  const handleGraphCapture = async (dataUrl: string) => {
+    setCrop(undefined); 
+    setSourceImage(dataUrl);
+    setIsEditingImage(true);
+    setBrightness(100);
+    setContrast(100);
+    setIsGraphingSheetOpen(false);
+  };
 
   const handleInsertImage = async () => {
     if (!imgRef.current) return;
@@ -610,6 +622,10 @@ export default function BoardPage() {
           <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
             <ImageIcon className="h-5 w-5" />
             <span className="sr-only">Add Image</span>
+          </Button>
+           <Button variant="ghost" size="icon" onClick={() => setIsGraphingSheetOpen(true)}>
+            <Sigma className="h-5 w-5" />
+            <span className="sr-only">Add Graph</span>
           </Button>
           <input
             type="file"
@@ -768,7 +784,7 @@ export default function BoardPage() {
                   </ReactCrop>
                 </div>
                 <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="brightness-slider">Brightness: {brightness}%</Label>
                              <Slider 
@@ -824,6 +840,15 @@ export default function BoardPage() {
                 <Button onClick={handleTextUpdate}>Save Changes</Button>
             </SheetFooter>
         </SheetContent>
+      </Sheet>
+
+       <Sheet open={isGraphingSheetOpen} onOpenChange={setIsGraphingSheetOpen}>
+          <SheetContent className="w-screen h-screen max-w-full sm:max-w-full" onInteractOutside={(e) => e.preventDefault()}>
+              <GraphingCanvas
+                  onClose={() => setIsGraphingSheetOpen(false)}
+                  onCapture={handleGraphCapture}
+              />
+          </SheetContent>
       </Sheet>
     </div>
   );
