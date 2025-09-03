@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Trash2, Camera, Sigma, ChevronsDown, ChevronsUp, Plus, Backspace } from 'lucide-react';
+import { X, Trash2, Camera, Sigma, ChevronsDown, ChevronsUp, Plus, Delete } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import functionPlot from 'function-plot';
 import html2canvas from 'html2canvas';
@@ -204,7 +204,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                     </Button>
                     ))}
                      <Button variant="outline" className="h-10 col-span-1" onClick={() => handleKeyboardClick('backspace')}>
-                        <Backspace />
+                        <Delete />
                     </Button>
                 </div>
             </CardContent>
@@ -213,5 +213,3 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
     </div>
   );
 };
-
-    
