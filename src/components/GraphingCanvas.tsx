@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Trash2, Camera, Sigma, ChevronsDown, ChevronsUp, Plus } from 'lucide-react';
+import { X, Trash2, Camera, Sigma, ChevronsDown, ChevronsUp, Plus, Backspace } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import functionPlot from 'function-plot';
 import html2canvas from 'html2canvas';
@@ -110,8 +110,15 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
     } else if (key === '=') {
         drawPlot();
         return;
-    }
-    else {
+    } else if (key === 'backspace') {
+      if (start > 0) {
+        newValue = currentValue.substring(0, start - 1) + currentValue.substring(end);
+        cursorPosOffset = -1;
+      } else {
+        newValue = currentValue;
+        cursorPosOffset = 0;
+      }
+    } else {
         newValue = currentValue.substring(0, start) + key + currentValue.substring(end);
     }
 
@@ -165,7 +172,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                 {isFormulaSheetOpen ? <ChevronsDown className="h-5 w-5" /> : <ChevronsUp className="h-5 w-5" />}
             </button>
             <CardContent className="p-4 grid gap-4">
-                <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-2">
+                <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2">
                     {formulas.map((f, index) => (
                         <div key={f.id} className="flex items-center gap-2">
                         <span className="w-2 h-6 rounded-full" style={{ backgroundColor: f.color }} />
@@ -196,6 +203,9 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                         {key}
                     </Button>
                     ))}
+                     <Button variant="outline" className="h-10 col-span-1" onClick={() => handleKeyboardClick('backspace')}>
+                        <Backspace />
+                    </Button>
                 </div>
             </CardContent>
         </Card>
@@ -203,3 +213,5 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
     </div>
   );
 };
+
+    
