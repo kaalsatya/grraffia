@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Trash2, Camera, Sigma, ChevronsDown, ChevronsUp, Plus, Delete } from 'lucide-react';
+import { X, Trash2, Camera, Sigma, Plus, Delete } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import functionPlot from 'function-plot';
 import html2canvas from 'html2canvas';
@@ -24,6 +24,7 @@ const keyboardLayout = [
 ];
 
 export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCapture }) => {
+  const plotContainerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLDivElement>(null);
   const [formulas, setFormulas] = useState<{ id: number; value: string; color: string }[]>([
     { id: 1, value: 'x^2', color: '#3366cc' },
@@ -31,17 +32,17 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
   const [nextId, setNextId] = useState(2);
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [isFormulaSheetOpen, setIsFormulaSheetOpen] = useState(true);
 
   const colors = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099', '#0099c6'];
 
   const drawPlot = useCallback(() => {
-    if (plotRef.current) {
+    if (plotRef.current && plotContainerRef.current) {
       try {
+        plotRef.current.innerHTML = '';
         functionPlot({
           target: plotRef.current,
-          width: plotRef.current.clientWidth,
-          height: plotRef.current.clientHeight,
+          width: plotContainerRef.current.clientWidth,
+          height: plotContainerRef.current.clientHeight,
           grid: true,
           data: formulas
             .filter(f => f.value.trim() !== '')
@@ -133,18 +134,8 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
   
   const handleCapture = async () => {
     if (plotRef.current) {
-        // Temporarily hide the formula sheet for the screenshot
-        const originalState = isFormulaSheetOpen;
-        setIsFormulaSheetOpen(false);
-        // Allow the UI to update
-        await new Promise(resolve => setTimeout(resolve, 50));
-
         const canvas = await html2canvas(plotRef.current, { useCORS: true, backgroundColor: '#ffffff' });
         const dataUrl = canvas.toDataURL('image/png');
-        
-        // Restore the formula sheet
-        setIsFormulaSheetOpen(originalState);
-
         onCapture(dataUrl);
     }
   };
@@ -159,22 +150,16 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
         </div>
       </header>
 
-      <main className="flex-grow relative">
+      <main ref={plotContainerRef} className="flex-grow w-full relative">
         <div ref={plotRef} className="w-full h-full bg-white" />
       </main>
       
-      <div className={cn("absolute bottom-0 left-0 right-0 z-10 transition-transform duration-300 ease-in-out", isFormulaSheetOpen ? 'translate-y-0' : 'translate-y-[calc(100%-48px)]')}>
-        <Card className="rounded-t-lg rounded-b-none border-t-2">
-            <button 
-                className="w-full h-12 flex justify-center items-center cursor-pointer"
-                onClick={() => setIsFormulaSheetOpen(!isFormulaSheetOpen)}
-            >
-                {isFormulaSheetOpen ? <ChevronsDown className="h-5 w-5" /> : <ChevronsUp className="h-5 w-5" />}
-            </button>
-            <CardContent className="p-4 grid gap-4">
-                <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-2">
+      <footer className="flex-shrink-0">
+        <Card className="rounded-t-lg rounded-b-none border-t-2 border-x-0 border-b-0">
+            <CardContent className="p-2 grid gap-2">
+                <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-2">
                     {formulas.map((f, index) => (
-                        <div key={f.id} className="flex items-center gap-2">
+                        <div key={f.id} className="flex items-center gap-2 flex-shrink-0">
                         <span className="w-2 h-6 rounded-full" style={{ backgroundColor: f.color }} />
                         <Input
                             ref={el => (inputRefs.current[index] = el)}
@@ -183,7 +168,10 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                             value={f.value}
                             onFocus={() => setActiveInputIndex(index)}
                             onClick={() => setActiveInputIndex(index)}
-                            onKeyDown={e => { if (e.key === 'Enter') drawPlot() }}
+                            onKeyDown={(e) => { 
+                              if (e.key === 'Enter') drawPlot() 
+                              e.preventDefault();
+                            }}
                             className="flex-grow bg-muted border-muted-foreground/30"
                             placeholder="y = f(x)"
                         />
@@ -192,24 +180,24 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                         </Button>
                         </div>
                     ))}
-                    <Button onClick={addFormula} variant="outline" className="mt-2">
-                        <Plus className="h-4 w-4 mr-2" /> Add Formula
-                    </Button>
                 </div>
+                 <Button onClick={addFormula} variant="outline" size="sm" className="w-full">
+                    <Plus className="h-4 w-4 mr-2" /> Add Formula
+                </Button>
                 
-                <div className="grid grid-cols-6 gap-1">
+                <div className="grid grid-cols-6 gap-1 pt-2">
                     {keyboardLayout.flat().map((key) => (
-                    <Button key={key} variant="outline" className="h-10 text-base" onClick={() => handleKeyboardClick(key)}>
+                    <Button key={key} variant="outline" className="h-9 text-base" onClick={() => handleKeyboardClick(key)}>
                         {key}
                     </Button>
                     ))}
-                     <Button variant="outline" className="h-10 col-span-1" onClick={() => handleKeyboardClick('backspace')}>
+                     <Button variant="outline" className="h-9 col-span-1" onClick={() => handleKeyboardClick('backspace')}>
                         <Delete />
                     </Button>
                 </div>
             </CardContent>
         </Card>
-      </div>
+      </footer>
     </div>
   );
 };
