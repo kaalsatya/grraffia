@@ -16,11 +16,10 @@ interface GraphingCanvasProps {
 }
 
 const keyboardLayout = [
-    ['x', 'y', 'pi', '^', '(', ')'],
-    ['7', '8', '9', '+', 'sqrt'],
-    ['4', '5', '6', '-', 'sin'],
-    ['1', '2', '3', '*', 'cos'],
-    ['0', '.', '=', '/', 'tan']
+    ['x', 'y', 'pi', '^', '(', ')', 'sqrt'],
+    ['7', '8', '9', '+', '-', 'sin', 'cos'],
+    ['4', '5', '6', '*', '/', 'tan', 'log'],
+    ['1', '2', '3', '.', '=', 'e', 'abs'],
 ];
 
 export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCapture }) => {
@@ -105,7 +104,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
     let newValue = '';
     let cursorPosOffset = key.length;
     
-    if (key === 'sqrt' || key === 'sin' || key === 'cos' || key === 'tan') {
+    if (key === 'sqrt' || key === 'sin' || key === 'cos' || key === 'tan' || key === 'log' || key === 'abs') {
         newValue = currentValue.substring(0, start) + `${key}()` + currentValue.substring(end);
         cursorPosOffset = key.length + 1;
     } else if (key === '=') {
@@ -143,7 +142,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
   return (
     <div className="h-full w-full flex flex-col bg-background text-foreground">
       <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 border-b">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Sigma/> Graphing Calculator</h2>
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Sigma/>Graphing Calculator</h2>
         <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={handleCapture}><Camera /><span className="sr-only">Capture</span></Button>
             <Button variant="ghost" size="icon" onClick={onClose}><X /><span className="sr-only">Close</span></Button>
@@ -185,13 +184,16 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                     <Plus className="h-4 w-4 mr-2" /> Add Formula
                 </Button>
                 
-                <div className="grid grid-cols-6 gap-1 pt-2">
+                <div className="grid grid-cols-7 gap-1 pt-2">
                     {keyboardLayout.flat().map((key) => (
-                    <Button key={key} variant="outline" className="h-9 text-base" onClick={() => handleKeyboardClick(key)}>
+                    <Button key={key} variant="outline" className="h-8 text-sm p-2" onClick={() => handleKeyboardClick(key)}>
                         {key}
                     </Button>
                     ))}
-                     <Button variant="outline" className="h-9 col-span-1" onClick={() => handleKeyboardClick('backspace')}>
+                    <Button variant="outline" className="h-8 col-span-1 p-2" onClick={() => handleKeyboardClick('0')}>
+                        0
+                    </Button>
+                     <Button variant="outline" className="h-8 col-span-1 p-2" onClick={() => handleKeyboardClick('backspace')}>
                         <Delete />
                     </Button>
                 </div>
