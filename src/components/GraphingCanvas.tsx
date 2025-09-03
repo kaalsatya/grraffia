@@ -16,11 +16,12 @@ interface GraphingCanvasProps {
 }
 
 const keyboardLayout = [
-    ['x', 'y', 'pi', '^', '(', ')', 'sqrt'],
-    ['7', '8', '9', '+', '-', 'sin', 'cos'],
-    ['4', '5', '6', '*', '/', 'tan', 'log'],
-    ['1', '2', '3', '.', '=', 'e', 'abs'],
+    ['x', 'y', 'pi', '^', '(', ')', 'sqrt', 'sin'],
+    ['7', '8', '9', '+', '-', 'cos', 'tan', 'log'],
+    ['4', '5', '6', '*', '/', 'abs', 'e', ''],
+    ['1', '2', '3', '.', '=', '0', '', 'backspace'],
 ];
+
 
 export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCapture }) => {
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -184,18 +185,21 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                     <Plus className="h-4 w-4 mr-2" /> Add Formula
                 </Button>
                 
-                <div className="grid grid-cols-7 gap-1 pt-2">
-                    {keyboardLayout.flat().map((key) => (
-                    <Button key={key} variant="outline" className="h-8 text-sm p-2" onClick={() => handleKeyboardClick(key)}>
-                        {key}
-                    </Button>
-                    ))}
-                    <Button variant="outline" className="h-8 col-span-1 p-2" onClick={() => handleKeyboardClick('0')}>
-                        0
-                    </Button>
-                     <Button variant="outline" className="h-8 col-span-1 p-2" onClick={() => handleKeyboardClick('backspace')}>
-                        <Delete />
-                    </Button>
+                <div className="grid grid-cols-8 gap-1 pt-2">
+                    {keyboardLayout.flat().map((key, index) =>
+                        key ? (
+                            <Button
+                                key={index}
+                                variant="outline"
+                                className="h-8 text-sm p-1"
+                                onClick={() => handleKeyboardClick(key)}
+                            >
+                                {key === 'backspace' ? <Delete /> : key}
+                            </Button>
+                        ) : (
+                            <div key={index} />
+                        )
+                    )}
                 </div>
             </CardContent>
         </Card>
