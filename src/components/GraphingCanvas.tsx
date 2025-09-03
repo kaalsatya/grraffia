@@ -157,7 +157,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
       <footer className="flex-shrink-0">
         <Card className="rounded-t-lg rounded-b-none border-t-2 border-x-0 border-b-0">
             <CardContent className="p-2 grid gap-2">
-                <div className="flex flex-col gap-2 max-h-32 overflow-y-auto pr-2">
+                <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-2">
                     {formulas.map((f, index) => (
                         <div key={f.id} className="flex items-center gap-2 flex-shrink-0">
                         <span className="w-2 h-6 rounded-full" style={{ backgroundColor: f.color }} />
