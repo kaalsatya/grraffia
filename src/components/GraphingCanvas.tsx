@@ -141,7 +141,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-background text-foreground">
+    <div className="h-full w-full flex flex-col bg-background text-foreground relative">
       <header className="flex-shrink-0 h-12 flex items-center justify-between px-3 border-b">
         <h2 className="text-lg font-semibold flex items-center gap-2"><Sigma/>Graphing Calculator</h2>
         <div className="flex items-center gap-2">
@@ -150,11 +150,11 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
         </div>
       </header>
 
-      <main ref={plotContainerRef} className="flex-grow w-full relative">
+      <main ref={plotContainerRef} className="flex-grow w-full pb-[280px]">
         <div ref={plotRef} className="w-full h-full bg-white" />
       </main>
       
-      <footer className="flex-shrink-0">
+      <footer className="absolute bottom-0 left-0 right-0 w-full flex-shrink-0">
         <Card className="rounded-t-lg rounded-b-none border-t-2 border-x-0 border-b-0">
             <CardContent className="p-2 grid gap-2">
                 <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-2">
