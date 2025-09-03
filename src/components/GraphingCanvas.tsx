@@ -29,7 +29,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
     { id: 1, value: 'x^2', color: '#3366cc' },
   ]);
   const [nextId, setNextId] = useState(2);
-  const [activeInput, setActiveInput] = useState<number | null>(null);
+  const [activeInputIndex, setActiveInputIndex] = useState<number | null>(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isFormulaSheetOpen, setIsFormulaSheetOpen] = useState(true);
 
@@ -65,10 +65,10 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
   }, [drawPlot]);
   
   useEffect(() => {
-    if (activeInput !== null && inputRefs.current[activeInput]) {
-      inputRefs.current[activeInput]?.focus();
+    if (activeInputIndex !== null && inputRefs.current[activeInputIndex]) {
+      inputRefs.current[activeInputIndex]?.focus();
     }
-  }, [activeInput]);
+  }, [activeInputIndex]);
 
   const handleFormulaChange = (id: number, value: string) => {
     setFormulas(formulas.map(f => (f.id === id ? { ...f, value } : f)));
@@ -76,33 +76,37 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
 
   const addFormula = () => {
     const newColor = colors[formulas.length % colors.length];
-    setFormulas([...formulas, { id: nextId, value: '', color: newColor }]);
-    setActiveInput(formulas.length);
+    const newFormula = { id: nextId, value: '', color: newColor };
+    setFormulas([...formulas, newFormula]);
+    setActiveInputIndex(formulas.length);
     setNextId(nextId + 1);
   };
 
   const removeFormula = (id: number) => {
     setFormulas(formulas.filter(f => f.id !== id));
     if (formulas.length === 1) {
-        addFormula();
+        setFormulas([{ id: nextId, value: '', color: colors[0] }]);
+        setNextId(nextId + 1);
     }
+     setActiveInputIndex(Math.max(0, formulas.length - 2));
   };
 
   const handleKeyboardClick = (key: string) => {
-    if (activeInput === null) return;
+    if (activeInputIndex === null) return;
 
-    const input = inputRefs.current[activeInput];
+    const input = inputRefs.current[activeInputIndex];
+    const formulaId = formulas[activeInputIndex].id;
     if (!input) return;
 
     const start = input.selectionStart ?? 0;
     const end = input.selectionEnd ?? 0;
     const currentValue = input.value;
     let newValue = '';
+    let cursorPosOffset = key.length;
     
-    if (key === 'sqrt') {
-        newValue = currentValue.substring(0, start) + 'sqrt()' + currentValue.substring(end);
-    } else if (key === 'sin' || key === 'cos' || key === 'tan') {
+    if (key === 'sqrt' || key === 'sin' || key === 'cos' || key === 'tan') {
         newValue = currentValue.substring(0, start) + `${key}()` + currentValue.substring(end);
+        cursorPosOffset = key.length + 1;
     } else if (key === '=') {
         drawPlot();
         return;
@@ -111,18 +115,29 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
         newValue = currentValue.substring(0, start) + key + currentValue.substring(end);
     }
 
-    handleFormulaChange(formulas[activeInput].id, newValue);
+    handleFormulaChange(formulaId, newValue);
 
-    const newCursorPos = start + key.length + (key.includes('()') ? -1 : 0);
+    const newCursorPos = start + cursorPosOffset;
     setTimeout(() => {
+      input.focus();
       input.setSelectionRange(newCursorPos, newCursorPos);
     }, 0);
   };
   
   const handleCapture = async () => {
     if (plotRef.current) {
-        const canvas = await html2canvas(plotRef.current, { useCORS: true });
+        // Temporarily hide the formula sheet for the screenshot
+        const originalState = isFormulaSheetOpen;
+        setIsFormulaSheetOpen(false);
+        // Allow the UI to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const canvas = await html2canvas(plotRef.current, { useCORS: true, backgroundColor: '#ffffff' });
         const dataUrl = canvas.toDataURL('image/png');
+        
+        // Restore the formula sheet
+        setIsFormulaSheetOpen(originalState);
+
         onCapture(dataUrl);
     }
   };
@@ -142,9 +157,9 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
       </main>
       
       <div className={cn("absolute bottom-0 left-0 right-0 z-10 transition-transform duration-300 ease-in-out", isFormulaSheetOpen ? 'translate-y-0' : 'translate-y-[calc(100%-48px)]')}>
-        <Card className="rounded-t-lg rounded-b-none">
+        <Card className="rounded-t-lg rounded-b-none border-t-2">
             <button 
-                className="w-full py-2 flex justify-center items-center cursor-pointer"
+                className="w-full h-12 flex justify-center items-center cursor-pointer"
                 onClick={() => setIsFormulaSheetOpen(!isFormulaSheetOpen)}
             >
                 {isFormulaSheetOpen ? <ChevronsDown className="h-5 w-5" /> : <ChevronsUp className="h-5 w-5" />}
@@ -157,14 +172,15 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                         <Input
                             ref={el => (inputRefs.current[index] = el)}
                             type="text"
+                            readOnly
                             value={f.value}
-                            onFocus={() => setActiveInput(index)}
-                            onChange={e => handleFormulaChange(f.id, e.target.value)}
+                            onFocus={() => setActiveInputIndex(index)}
+                            onClick={() => setActiveInputIndex(index)}
                             onKeyDown={e => { if (e.key === 'Enter') drawPlot() }}
                             className="flex-grow bg-muted border-muted-foreground/30"
                             placeholder="y = f(x)"
                         />
-                        <Button variant="ghost" size="icon" onClick={() => removeFormula(f.id)} disabled={formulas.length <= 1}>
+                        <Button variant="ghost" size="icon" onClick={() => removeFormula(f.id)} disabled={formulas.length <= 1 && f.value === ''}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                         </div>
@@ -176,7 +192,7 @@ export const GraphingCanvas: React.FC<GraphingCanvasProps> = ({ onClose, onCaptu
                 
                 <div className="grid grid-cols-6 gap-1">
                     {keyboardLayout.flat().map((key) => (
-                    <Button key={key} variant="outline" size="icon" className="h-10 text-base" onClick={() => handleKeyboardClick(key)}>
+                    <Button key={key} variant="outline" className="h-10 text-base" onClick={() => handleKeyboardClick(key)}>
                         {key}
                     </Button>
                     ))}
