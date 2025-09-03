@@ -639,7 +639,7 @@ export default function BoardPage() {
                           position: 'absolute',
                           left: `${item.position[0]}%`,
                           top: `${item.position[1]}%`,
-                          transform: `translate(-50%, -50%) rotate(${item.rotation}deg)`,
+                          transform: `translate(0, -50%) rotate(${item.rotation}deg)`,
                           fontSize: `${item.font_size}px`,
                           width: `${item.width}px`,
                           color: 'black',
