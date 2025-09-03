@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { WorkspaceContext } from '@/context/WorkspaceContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -72,7 +73,8 @@ export default function BoardPage() {
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [editingTextItem, setEditingTextItem] = useState<TextItem | null>(null);
+  const [isEditingTextSheetOpen, setIsEditingTextSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSaveErrorAlert, setShowSaveErrorAlert] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false);
@@ -280,14 +282,18 @@ export default function BoardPage() {
     setBoardData({ ...boardData, slides: updatedSlides });
   };
   
-  const handleTextDoubleClick = (textId: string) => {
-    setEditingTextId(textId);
-    setSelectedItemId(textId);
+  const handleTextDoubleClick = (item: TextItem) => {
+    setEditingTextItem(item);
+    setIsEditingTextSheetOpen(true);
   };
 
-  const handleTextBlur = () => {
-    setEditingTextId(null);
-  };
+  const handleTextUpdate = () => {
+      if (editingTextItem) {
+          updateItem(editingTextItem.id, { content: editingTextItem.content });
+      }
+      setIsEditingTextSheetOpen(false);
+      setEditingTextItem(null);
+  }
 
   const handleMoveItem = (direction: 'up' | 'down' | 'left' | 'right' | 'up-left' | 'up-right' | 'down-left' | 'down-right') => {
     if (!selectedItemId) return;
@@ -627,13 +633,8 @@ export default function BoardPage() {
                       item.type === 'text' ? (
                       <div
                         key={item.id}
-                        onDoubleClick={() => handleTextDoubleClick(item.id)}
-                        onClick={() => {
-                          setSelectedItemId(item.id);
-                          if (editingTextId && editingTextId !== item.id) {
-                            setEditingTextId(null);
-                          }
-                        }}
+                        onDoubleClick={() => handleTextDoubleClick(item)}
+                        onClick={() => setSelectedItemId(item.id)}
                         style={{
                           position: 'absolute',
                           left: `${item.position[0]}%`,
@@ -648,26 +649,7 @@ export default function BoardPage() {
                           border: selectedItemId === item.id ? '2px dashed hsl(var(--muted-foreground))' : '2px dashed transparent',
                         }}
                       >
-                          {editingTextId === item.id ? (
-                            <Textarea
-                                value={item.content}
-                                onChange={(e) => updateItem(item.id, { content: e.target.value })}
-                                onBlur={handleTextBlur}
-                                autoFocus
-                                className="w-full h-full p-0 m-0 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                style={{
-                                    fontSize: 'inherit',
-                                    fontFamily: 'inherit',
-                                    color: 'inherit',
-                                    lineHeight: 'inherit',
-                                    textAlign: 'inherit',
-                                    outline: 'none',
-                                }}
-                                onKeyDown={(e) => e.stopPropagation()} // Prevent controls from firing
-                            />
-                        ) : (
-                          item.content
-                        )}
+                        {item.content}
                       </div>
                       ) : (
                         <div
@@ -816,6 +798,30 @@ export default function BoardPage() {
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isLoading ? "Inserting..." : "Insert Image"}
                 </Button>
+            </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={isEditingTextSheetOpen} onOpenChange={setIsEditingTextSheetOpen}>
+        <SheetContent side="bottom" className="h-auto">
+            <SheetHeader>
+                <SheetTitle>Edit Text</SheetTitle>
+                <SheetDescription>
+                    Modify the text content below.
+                </SheetDescription>
+            </SheetHeader>
+            {editingTextItem && (
+              <div className="py-4">
+                <Textarea
+                    value={editingTextItem.content}
+                    onChange={(e) => setEditingTextItem({...editingTextItem, content: e.target.value })}
+                    className="min-h-[200px] text-lg"
+                />
+              </div>
+            )}
+            <SheetFooter>
+                <Button onClick={() => setIsEditingTextSheetOpen(false)} variant="outline">Cancel</Button>
+                <Button onClick={handleTextUpdate}>Save Changes</Button>
             </SheetFooter>
         </SheetContent>
       </Sheet>
